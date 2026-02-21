@@ -102,6 +102,7 @@
     <script type="module">
         import * as THREE from 'https://esm.sh/three@0.160.0';
         import { OrbitControls } from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+        import { J2000, getOrbitalPosition, PLANETS_DATA } from './astro-logic.js';
 
         const scene = new THREE.Scene();
         // Modification majeure : La caméra peut voir jusqu'à 150 000 unités de distance !
@@ -223,36 +224,17 @@
 
 
         // --- MATHÉMATIQUES SYSTÈME SOLAIRE ---
-        const J2000 = new Date('2000-01-01T12:00:00Z');
         let simulatedDate = new Date(); 
         const obsLat = 50.53 * Math.PI / 180; 
         const obsLon = 4.60; 
         
         const scale = 1.5; 
-        const planets = [
-            { name: "Soleil", color: "#ffcc00", radius: 25, a: 0, e: 0, period: 1, baseAngle: 0, omega: 0, realDist: "0 UA", history: [], info: { type: "Étoile", diam: "1 392 700 km", mass: "333 000 x Terre", temp: "~5 500 °C" } },
-            { name: "Mercure", color: "#b0b0b0", radius: 3, a: 50*scale, e: 0.205, period: 88, baseAngle: 4.4, omega: 0.5, realDist: "0.39 UA", history: [], info: { type: "Planète tellurique", diam: "4 879 km", mass: "0,055 x Terre", temp: "-173 à 427 °C" } },
-            { name: "Vénus", color: "#e3bb76", radius: 6, a: 85*scale, e: 0.007, period: 224.7, baseAngle: 3.17, omega: 1.3, realDist: "0.72 UA", history: [], info: { type: "Planète tellurique", diam: "12 104 km", mass: "0,815 x Terre", temp: "~462 °C" } },
-            { name: "Terre", color: "#4b90d1", tex: 'earth_atmos_2048.jpg', radius: 7, a: 130*scale, e: 0.017, period: 365.25, baseAngle: 1.75, omega: 0, realDist: "1.00 UA", history: [], info: { type: "Planète tellurique", diam: "12 742 km", mass: "1 x Terre", temp: "~15 °C" },
-              moons: [{ name: "Lune", color: "#aaaaaa", tex: 'moon_1024.jpg', radius: 1.5, dist: 14*scale, period: 27.3, baseAngle: 0, history: [], info: { type: "Satellite naturel", diam: "3 474 km", mass: "0,012 x Terre", temp: "-173 à 127 °C" } }] },
-            { name: "Mars", color: "#c1440e", tex: 'mars_1k_color.jpg', radius: 4, a: 180*scale, e: 0.094, period: 687, baseAngle: 6.20, omega: 5.0, realDist: "1.52 UA", history: [], info: { type: "Planète tellurique", diam: "6 779 km", mass: "0,107 x Terre", temp: "~ -63 °C" } },
-            { name: "Jupiter", color: "#d39c7e", radius: 16, a: 320*scale, e: 0.049, period: 4332, baseAngle: 0.59, omega: 0.2, realDist: "5.20 UA", history: [], info: { type: "Géante gazeuse", diam: "139 820 km", mass: "318 x Terre", temp: "-110 °C" },
-              moons: [{ name: "Io", color: 0xffffaa, radius: 1.2, dist: 22*scale, period: 1.7, baseAngle: 1, info: { type: "Satellite volcanique", diam: "3 642 km", mass: "0,015 x Terre", temp: "-130 °C" } },
-                      { name: "Europe", color: 0xaaddff, radius: 1, dist: 28*scale, period: 3.5, baseAngle: 2, info: { type: "Satellite glacé", diam: "3 121 km", mass: "0,008 x Terre", temp: "-160 °C" } }] },
-            { name: "Saturne", color: "#e6d5a8", radius: 13, a: 460*scale, e: 0.057, period: 10759, baseAngle: 0.87, omega: 1.6, realDist: "9.58 UA", history: [], info: { type: "Géante gazeuse", diam: "116 460 km", mass: "95 x Terre", temp: "-140 °C" } },
-            { name: "Uranus", color: "#71c8d7", radius: 9, a: 620*scale, e: 0.046, period: 30688, baseAngle: 5.46, omega: 3.0, realDist: "19.2 UA", history: [], info: { type: "Géante de glaces", diam: "50 724 km", mass: "14,5 x Terre", temp: "-195 °C" } },
-            { name: "Neptune", color: "#4b70dd", radius: 9, a: 780*scale, e: 0.011, period: 60182, baseAngle: 5.31, omega: 0.8, realDist: "30.1 UA", history: [], info: { type: "Géante de glaces", diam: "49 244 km", mass: "17 x Terre", temp: "-200 °C" } },
-            { name: "Comète Halley", color: "#cceeff", radius: 2.5, a: 450*scale, e: 0.967, period: -27562, baseAngle: 3.14, omega: -0.8, realDist: "0.59 - 35.1 UA", history: [], info: { type: "Comète périodique", diam: "~11 km", mass: "Négligeable", temp: "Variable" } },
-            { name: "Pluton", color: "#ddccbb", radius: 4, a: 1020*scale, e: 0.248, period: 90560, baseAngle: 3.5, omega: 1.96, realDist: "29.6 - 49.3 UA", history: [], info: { type: "Planète naine", diam: "2 376 km", mass: "0,002 x Terre", temp: "-229 °C" } }
-        ];
-
-        function getOrbitalPosition(a, e, period, baseAngle, omega, daysSinceJ2000) {
-            let M = baseAngle + (daysSinceJ2000 / period) * Math.PI * 2;
-            let angle = M + 2 * e * Math.sin(M); 
-            const c = a * e, b = a * Math.sqrt(1 - e*e);
-            let localX = -c + a * Math.cos(angle), localZ = b * Math.sin(angle);
-            return new THREE.Vector3(localX * Math.cos(omega) - localZ * Math.sin(omega), 0, localX * Math.sin(omega) + localZ * Math.cos(omega));
-        }
+        const planets = PLANETS_DATA.map(p => ({
+            ...p,
+            a: p.a * scale,
+            history: [],
+            moons: p.moons ? p.moons.map(m => ({ ...m, dist: m.dist * scale, history: [] })) : null
+        }));
 
         const astresMeshes = [];
         const cliquables = [];
@@ -267,7 +249,7 @@
 
         planets.forEach((p, i) => {
             const group = new THREE.Group(); scene.add(group);
-            const material = (i === 0) ? new THREE.MeshBasicMaterial({ map: sunTex }) : new THREE.MeshStandardMaterial({ color: p.color });
+            const material = (i === 0) ? new THREE.MeshBasicMaterial({ map: sunTex }) : new THREE.MeshStandardMaterial({ color: new THREE.Color(p.color) });
             
             if (p.tex) loadTextureSafely(CDN_URL + p.tex, material);
 
@@ -283,14 +265,17 @@
 
             if (i > 0) {
                 const pts = [];
-                for(let j=0; j<=128; j++) pts.push(getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, (j/128)*Math.abs(p.period)));
+                for(let j=0; j<=128; j++) {
+                    const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, (j/128)*Math.abs(p.period));
+                    pts.push(new THREE.Vector3(pos.x, 0, pos.y));
+                }
                 const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: p.color, transparent: true, opacity: 0.4 }));
                 scene.add(line); orbitesMeshes.push(line);
             }
 
             if (p.moons) {
                 p.moons.forEach((m, j) => {
-                    const mMat = new THREE.MeshStandardMaterial({ color: m.color });
+                    const mMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(m.color) });
                     if (m.tex) loadTextureSafely(CDN_URL + m.tex, mMat);
                     const mMesh = new THREE.Mesh(new THREE.SphereGeometry(m.radius, 32, 32), mMat);
                     mMesh.userData = { id: i, moonId: j, isMoon: true, ref: m };
@@ -416,7 +401,7 @@
             planets.forEach((p, i) => {
                 if (i > 0) {
                     const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, daysSinceJ2000);
-                    p.groupRef.position.copy(pos); p.meshRef.rotation.y += 0.01; if (i === 3) posTerre.copy(pos); 
+                    p.groupRef.position.set(pos.x, 0, pos.y); p.meshRef.rotation.y += 0.01; if (i === 3) posTerre.set(pos.x, 0, pos.y); 
                     if (p.moons) { p.moons.forEach(m => { let M = m.baseAngle + (daysSinceJ2000 / m.period) * Math.PI * 2; m.meshRef.position.set(Math.cos(M)*m.dist, 0, Math.sin(M)*m.dist); }); }
                 } else { p.meshRef.rotation.y += 0.002; }
             });
