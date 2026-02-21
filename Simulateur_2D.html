@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Système Solaire & Voie Lactée</title>
+    <style>
+        html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#020205;font-family:sans-serif;color:#fff;touch-action:none}
+        #ui-container{position:absolute;top:10px;left:10px;background:rgba(10,15,30,.85);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);z-index:10;backdrop-filter:blur(4px);max-width:240px;max-height:85vh;overflow-y:auto}
+        h1{margin:0 0 10px;font-size:1rem;color:#4da8da;text-transform:uppercase}
+        .control-group{margin-bottom:10px;display:flex;flex-direction:column;gap:5px}
+        .checkbox-group{flex-direction:row;align-items:center;cursor:pointer;font-size:.9rem}
+        .btn-group{display:flex;gap:5px}
+        input[type=range]{width:100%;cursor:pointer}
+        input[type=date], select{background:#1a2535;color:#4da8da;border:1px solid rgba(77,168,218,0.5);padding:5px;border-radius:5px;font-family:inherit;width:100%;outline:none;cursor:pointer;}
+        button{background:#4da8da;color:#050510;border:none;padding:6px;border-radius:5px;cursor:pointer;font-weight:bold;flex:1}
+        button:hover{background:#79c2ea}
+        #toggle-ui-btn{background:#3a4a5a;color:#fff;margin-top:5px;width:100%}
+        #galaxy-btn{background:#8b4dda;color:#fff;margin-bottom:10px;width:100%}
+        #night-mode-btn{background:#882222;color:#fff;border:1px solid #ff4444; width: 100%;}
+        .info-text{font-size:.8rem;color:#aaa;margin-top:5px;border-top:1px solid rgba(255,255,255,.1);padding-top:8px}
+        #tooltip{position:absolute;background:rgba(0,0,0,.9);border:1px solid #4da8da;padding:10px;border-radius:8px;pointer-events:none;opacity:0;z-index:20;transition: opacity 0.1s;}
+        #tooltip .value,.highlight{color:#4da8da;font-weight:bold}
+        canvas{display:block;width:100%;height:100%}
+        #red-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,0,0,.7);mix-blend-mode:multiply;pointer-events:none;z-index:9998}
+
+        /* Styles du Panneau d'Information */
+        #info-panel {
+            position: absolute; bottom: -100%; left: 50%; transform: translateX(-50%);
+            background: rgba(10, 15, 30, 0.92); padding: 20px;
+            border-radius: 15px 15px 0 0; border: 1px solid rgba(77,168,218,0.4); border-bottom: none;
+            z-index: 15; backdrop-filter: blur(8px); color: white; width: 90%; max-width: 450px;
+            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+        #info-panel.active { bottom: 0; }
+        #info-panel h2 { margin: 0 0 15px 0; font-size: 1.4rem; letter-spacing: 1px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem; text-align: left;}
+        .info-grid div { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        .info-grid span { color: #4da8da; font-weight: bold; display: block; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 3px;}
+        #close-info { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-weight: bold; font-size: 1.2rem; transition: 0.2s; }
+        #close-info:hover { color: white; transform: scale(1.1); }
+    </style>
+</head>
+<body>
+    <div id="ui-container">
+        <div id="ui-content">
+            <h1>Exploration</h1>
+            <button id="galaxy-btn">🌌 Voir la Voie Lactée</button>
+
+            <div id="solar-controls">
+                
+                <div class="control-group">
+                    <label style="font-size: 0.9rem;">🎯 Chercher un astre :</label>
+                    <select id="target-select">
+                        <option value="-1">Vue libre</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label style="font-size: 0.9rem;">🗓️ Date : <span id="date-display" class="highlight"></span></label>
+                    <input type="date" id="date-picker">
+                </div>
+
+                <div class="control-group">
+                    <label style="font-size: 0.9rem;">Vitesse écoulée : <span id="speed-display">1 jour/sec</span></label>
+                    <input type="range" id="speed-slider" min="-10" max="10" step="0.5" value="1">
+                </div>
+                
+                <div class="control-group">
+                    <div class="btn-group">
+                        <button id="zoom-in-btn">🔍 +</button>
+                        <button id="zoom-out-btn">🔍 -</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <button id="pause-btn">Mettre en pause</button>
+                    <button id="night-mode-btn" style="margin-top: 5px;">🔴 Nuit</button>
+                </div>
+                
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-ecliptic"><label for="toggle-ecliptic">Grille Écliptique</label></div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-orbits" checked><label for="toggle-orbits">Orbites</label></div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-asteroids" checked><label for="toggle-asteroids">Ceinture principale</label></div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-kuiper" checked><label for="toggle-kuiper">Ceinture de Kuiper</label></div>
+            </div>
+        </div>
+        <button id="toggle-ui-btn">👁️ Masquer</button>
+    </div>
+
+    <div id="info-panel">
+        <div id="close-info">✕</div>
+        <h2 id="info-name">Planète</h2>
+        <div class="info-grid">
+            <div><span>Catégorie</span><div id="info-type" style="color:#ddd;">-</div></div>
+            <div><span>Diamètre</span><div id="info-diam" style="color:#ddd;">-</div></div>
+            <div><span>Masse</span><div id="info-mass" style="color:#ddd;">-</div></div>
+            <div><span>Température</span><div id="info-temp" style="color:#ddd;">-</div></div>
+        </div>
+    </div>
+
+    <div id="red-overlay"></div>
+
+    <div id="tooltip">
+        <h2 id="tt-name" style="margin:0 0 5px 0; font-size:1.1rem;">Planète</h2>
+        <p style="margin:2px 0; font-size:0.85rem;" id="tt-line1">Dist : <span id="tt-dist" class="value">-</span></p>
+        <p style="margin:2px 0; font-size:0.85rem;" id="tt-line2">Excentr : <span id="tt-ecc" class="value">-</span></p>
+        <p style="margin:6px 0 0 0; font-size:0.9rem; padding-top:4px; border-top:1px solid rgba(255,255,255,0.2);" id="tt-line-horizon"></p>
+        <p style="margin:4px 0 0 0; font-size:0.9rem; display:none;" id="tt-line3"></p>
+    </div>
+
+    <canvas id="solar-system"></canvas>
+
+    <script>
+        const canvas = document.getElementById('solar-system');
+        const ctx = canvas.getContext('2d');
+        let width = window.innerWidth, height = window.innerHeight;
+        window.addEventListener('resize', () => { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; });
+        width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight;
+
+        const J2000 = new Date('2000-01-01T12:00:00Z');
+        let simulatedDate = new Date(); 
+        const obsLat = 50.53 * Math.PI / 180; 
+        const obsLon = 4.60; 
+
+        const datePicker = document.getElementById('date-picker');
+        const dateDisplay = document.getElementById('date-display');
+        datePicker.valueAsDate = simulatedDate;
+
+        datePicker.addEventListener('change', (e) => {
+            simulatedDate = new Date(e.target.value);
+            planets.forEach(p => p.history = []);
+            planets.forEach(p => { if(p.moons) p.moons.forEach(m => m.history = []) });
+        });
+
+        let isNightMode = false;
+        document.getElementById('night-mode-btn').addEventListener('click', (e) => {
+            isNightMode = !isNightMode;
+            document.getElementById('red-overlay').style.display = isNightMode ? 'block' : 'none';
+            e.target.style.background = isNightMode ? '#ff4444' : '#882222';
+        });
+
+        document.getElementById('toggle-ui-btn').addEventListener('click', (e) => {
+            const ui = document.getElementById('ui-content');
+            ui.style.display = ui.style.display === 'none' ? 'block' : 'none';
+            e.target.innerText = ui.style.display === 'none' ? '⚙️ Afficher' : '👁️ Masquer';
+        });
+
+        let isGalacticView = false;
+        document.getElementById('galaxy-btn').addEventListener('click', (e) => {
+            isGalacticView = !isGalacticView;
+            e.target.innerText = isGalacticView ? "🪐 Retour au Système" : "🌌 Voir la Galaxie";
+            e.target.style.background = isGalacticView ? "#4da8da" : "#8b4dda";
+            document.getElementById('solar-controls').style.display = isGalacticView ? "none" : "block";
+            if(isGalacticView) hideInfoPanel();
+        });
+
+        const galaxyParticles = [];
+        for (let i = 0; i < 4000; i++) {
+            let r = Math.pow(Math.random(), 1.5) * 600; 
+            let angle = (Math.PI * 2 / 4) * Math.floor(Math.random() * 4) + r * 0.01 + (Math.random() - 0.5) * 0.6;
+            let scatter = (Math.random() - 0.5) * 80 * (1 - r/800); 
+            galaxyParticles.push({
+                x: Math.cos(angle) * r + scatter, y: Math.sin(angle) * r + scatter,
+                radius: Math.random() * 1.5,
+                color: r < 150 ? `rgba(255, 240, 200, ${Math.random()})` : `rgba(180, 210, 255, ${0.2 + Math.random() * 0.5})`
+            });
+        }
+        
+        const stars = Array.from({length: 1500}, () => ({ x: (Math.random() - 0.5) * 15000, y: (Math.random() - 0.5) * 15000, radius: 0.5 + Math.random() * 1.5, alpha: 0.2 + Math.random() * 0.8 }));
+
+        const planets = [
+            { name: "Soleil", color: "#ffcc00", radius: 22, a: 0, e: 0, period: 1, baseAngle: 0, omega: 0, realDist: "0 UA", history: [], isVisibleLocal: false, 
+              info: { type: "Étoile (Naine jaune)", diam: "1 392 700 km", mass: "333 000 x Terre", temp: "~5 500 °C" } },
+            { name: "Mercure", color: "#b0b0b0", radius: 3, a: 50, e: 0.205, period: 88, baseAngle: 4.4, omega: 0.5, realDist: "0.39 UA", history: [], isVisibleLocal: false,
+              info: { type: "Planète tellurique", diam: "4 879 km", mass: "0,055 x Terre", temp: "-173 à 427 °C" } },
+            { name: "Vénus", color: "#e3bb76", radius: 6, a: 85, e: 0.007, period: 224.7, baseAngle: 3.17, omega: 1.3, realDist: "0.72 UA", history: [], isVisibleLocal: false,
+              info: { type: "Planète tellurique", diam: "12 104 km", mass: "0,815 x Terre", temp: "~462 °C" } },
+            { name: "Terre", color: "#4b90d1", radius: 7, a: 130, e: 0.017, period: 365.25, baseAngle: 1.75, omega: 0, realDist: "1.00 UA", history: [], isVisibleLocal: true,
+              info: { type: "Planète tellurique", diam: "12 742 km", mass: "1 x Terre", temp: "~15 °C" },
+              moons: [{ name: "Lune", radius: 1.5, dist: 14, period: 27.3, baseAngle: 0, color: "#ffffff", history: [], info: { type: "Satellite naturel", diam: "3 474 km", mass: "0,012 x Terre", temp: "-173 à 127 °C" } }] },
+            { name: "Mars", color: "#c1440e", radius: 4, a: 180, e: 0.094, period: 687, baseAngle: 6.20, omega: 5.0, realDist: "1.52 UA", history: [], isVisibleLocal: false,
+              info: { type: "Planète tellurique", diam: "6 779 km", mass: "0,107 x Terre", temp: "~ -63 °C" } },
+            { name: "Jupiter", color: "#d39c7e", radius: 16, a: 320, e: 0.049, period: 4332, baseAngle: 0.59, omega: 0.2, realDist: "5.20 UA", history: [], isVisibleLocal: false,
+              info: { type: "Géante gazeuse", diam: "139 820 km", mass: "318 x Terre", temp: "-110 °C" },
+              moons: [{ name: "Io", radius: 1.2, dist: 22, period: 1.7, baseAngle: 1, color: "#ffffaa", history: [], info: { type: "Satellite volcanique", diam: "3 642 km", mass: "0,015 x Terre", temp: "-130 °C" } },
+                      { name: "Europe", radius: 1, dist: 28, period: 3.5, baseAngle: 2, color: "#aaddff", history: [], info: { type: "Satellite glacé", diam: "3 121 km", mass: "0,008 x Terre", temp: "-160 °C" } }] },
+            { name: "Saturne", color: "#e6d5a8", radius: 13, a: 460, e: 0.057, period: 10759, baseAngle: 0.87, omega: 1.6, realDist: "9.58 UA", history: [], isVisibleLocal: false,
+              info: { type: "Géante gazeuse", diam: "116 460 km", mass: "95 x Terre", temp: "-140 °C" } },
+            { name: "Uranus", color: "#71c8d7", radius: 9, a: 620, e: 0.046, period: 30688, baseAngle: 5.46, omega: 3.0, realDist: "19.2 UA", history: [], isVisibleLocal: false,
+              info: { type: "Géante de glaces", diam: "50 724 km", mass: "14,5 x Terre", temp: "-195 °C" } },
+            { name: "Neptune", color: "#4b70dd", radius: 9, a: 780, e: 0.011, period: 60182, baseAngle: 5.31, omega: 0.8, realDist: "30.1 UA", history: [], isVisibleLocal: false,
+              info: { type: "Géante de glaces", diam: "49 244 km", mass: "17 x Terre", temp: "-200 °C" } },
+            { name: "Comète Halley", color: "#cceeff", radius: 2.5, a: 450, e: 0.967, period: -27562, baseAngle: 3.14, omega: -0.8, realDist: "0.59 - 35.1 UA", history: [], isVisibleLocal: false,
+              info: { type: "Comète périodique", diam: "~11 km", mass: "Négligeable", temp: "Variable" } },
+            { name: "Pluton", color: "#ddccbb", radius: 4, a: 1020, e: 0.248, period: 90560, baseAngle: 3.5, omega: 1.96, realDist: "29.6 - 49.3 UA", history: [], isVisibleLocal: false,
+              info: { type: "Planète naine", diam: "2 376 km", mass: "0,002 x Terre", temp: "-229 °C" } }
+        ];
+
+        const targetSelect = document.getElementById('target-select');
+        planets.forEach((p, i) => {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerText = p.name;
+            targetSelect.appendChild(opt);
+            if (p.moons) {
+                p.moons.forEach((m, j) => {
+                    let optM = document.createElement('option');
+                    optM.value = i + "-" + j;
+                    optM.innerText = "  ↳ " + m.name;
+                    targetSelect.appendChild(optM);
+                });
+            }
+        });
+
+        const infoPanel = document.getElementById('info-panel');
+        
+        function hideInfoPanel() {
+            infoPanel.classList.remove('active');
+        }
+
+        function showInfoPanel(body) {
+            if (!body || !body.info) {
+                hideInfoPanel();
+                return;
+            }
+            document.getElementById('info-name').innerText = body.name;
+            document.getElementById('info-name').style.color = body.color;
+            document.getElementById('info-type').innerText = body.info.type;
+            document.getElementById('info-diam').innerText = body.info.diam;
+            document.getElementById('info-mass').innerText = body.info.mass;
+            document.getElementById('info-temp').innerText = body.info.temp;
+            infoPanel.classList.add('active');
+        }
+
+        document.getElementById('close-info').addEventListener('click', () => {
+            hideInfoPanel();
+            targetSelect.value = -1;
+            trackedBody = null;
+        });
+
+        targetSelect.addEventListener('change', (e) => {
+            let val = e.target.value;
+            if (val === "-1") {
+                trackedBody = null;
+                hideInfoPanel();
+            } else if (val.includes("-")) {
+                let parts = val.split("-");
+                trackedBody = planets[parseInt(parts[0])].moons[parseInt(parts[1])];
+                showInfoPanel(trackedBody);
+            } else {
+                trackedBody = planets[parseInt(val)];
+                showInfoPanel(trackedBody);
+            }
+        });
+
+        const keplerK = Math.pow(365.25, 2) / Math.pow(130, 3);
+        const generateBelt = (count, aMin, aVar, eMin, eVar, size, colorBase) => {
+            const belt = [];
+            for (let i = 0; i < count; i++) {
+                const a = aMin + Math.random() * aVar; 
+                const period = Math.sqrt(keplerK * Math.pow(a, 3)); 
+                belt.push({ a: a, e: eMin + Math.random() * eVar, period: period, baseAngle: Math.random() * Math.PI * 2, radius: Math.random() * size + 0.5, color: colorBase });
+            }
+            return belt;
+        };
+        const asteroids = generateBelt(2000, 210, 80, 0.01, 0.10, 2, `rgba(220,210,200,0.6)`);
+        const kuiperBelt = generateBelt(3000, 850, 400, 0.05, 0.20, 1.5, `rgba(180,210,240,0.5)`);
+
+        let baseSpeedMultiplier = 1; let isPaused = false;
+        let showOrbits = true, showAsteroids = true, showKuiper = true, showEcliptic = false;
+        let mouseX = -1000, mouseY = -1000, zoomLevel = 0.8;
+        let hoveredPlanet = null, trackedBody = null; 
+
+        document.getElementById('speed-slider').addEventListener('input', (e) => { baseSpeedMultiplier = parseFloat(e.target.value); document.getElementById('speed-display').innerText = baseSpeedMultiplier + ' j/sec'; });
+        document.getElementById('pause-btn').addEventListener('click', (e) => { isPaused = !isPaused; e.target.innerText = isPaused ? "Reprendre" : "Mettre en pause"; });
+        document.getElementById('zoom-in-btn').addEventListener('click', () => zoomLevel = Math.min(6.0, zoomLevel * 1.3));
+        document.getElementById('zoom-out-btn').addEventListener('click', () => zoomLevel = Math.max(0.15, zoomLevel / 1.3));
+        document.getElementById('toggle-ecliptic').addEventListener('change', e => showEcliptic = e.target.checked);
+        document.getElementById('toggle-orbits').addEventListener('change', e => showOrbits = e.target.checked);
+        document.getElementById('toggle-asteroids').addEventListener('change', e => showAsteroids = e.target.checked);
+        document.getElementById('toggle-kuiper').addEventListener('change', e => showKuiper = e.target.checked);
+        canvas.addEventListener('wheel', e => { e.preventDefault(); zoomLevel = Math.max(0.15, Math.min(6.0, zoomLevel + e.deltaY * -0.001)); }, { passive: false });
+
+        function updateInteraction(x, y) {
+            mouseX = x; mouseY = y;
+            if (isGalacticView) {
+                trackedBody = null;
+                hideInfoPanel();
+            } else {
+                trackedBody = hoveredPlanet;
+                if (trackedBody) {
+                    showInfoPanel(trackedBody);
+                    // Retrouver l'astre dans le menu déroulant
+                    let found = false;
+                    planets.forEach((p, i) => {
+                        if (p === trackedBody) { targetSelect.value = i; found = true; }
+                        if (p.moons) {
+                            p.moons.forEach((m, j) => {
+                                if (m === trackedBody) { targetSelect.value = i + "-" + j; found = true; }
+                            });
+                        }
+                    });
+                    if (!found) targetSelect.value = -1;
+                } else {
+                    hideInfoPanel();
+                    targetSelect.value = -1;
+                }
+            }
+        }
+
+        canvas.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+        canvas.addEventListener('mousedown', e => updateInteraction(e.clientX, e.clientY));
+        canvas.addEventListener('touchstart', e => { mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; setTimeout(() => updateInteraction(mouseX, mouseY), 50); }, { passive: true });
+
+        function draw() {
+            ctx.fillStyle = '#020205'; ctx.fillRect(0, 0, width, height);
+            ctx.save(); ctx.translate(width / 2, height / 2);
+
+            if (!isPaused) {
+                simulatedDate.setTime(simulatedDate.getTime() + (baseSpeedMultiplier * 86400000 / 60));
+                dateDisplay.innerText = simulatedDate.toLocaleDateString('fr-FR');
+            }
+            
+            let daysSinceJ2000 = (simulatedDate - J2000) / 86400000;
+            let gmst = 280.46061837 + 360.98564736629 * daysSinceJ2000;
+            let lst = (gmst + obsLon) % 360; 
+            let lstRad = lst * Math.PI / 180;
+            
+            hoveredPlanet = null;
+            // SCORE DE HOVER : Le score le plus bas l'emporte !
+            let minHoverScore = Infinity; 
+
+            if (isGalacticView) {
+                let galZoom = Math.min(width, height) / 1400; ctx.scale(galZoom, galZoom);
+                let galRotation = daysSinceJ2000 * 0.00001; 
+                ctx.rotate(galRotation);
+                
+                const grd = ctx.createRadialGradient(0,0,0,0,0,200);
+                grd.addColorStop(0, "rgba(255, 255, 230, 0.8)"); grd.addColorStop(1, "rgba(255, 255, 230, 0)");
+                ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(0,0,200,0,Math.PI*2); ctx.fill();
+
+                galaxyParticles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.radius/galZoom, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill(); });
+
+                ctx.rotate(-galRotation);
+                let screenSsX = Math.cos(2.5) * 350, screenSsY = Math.sin(2.5) * 350;
+                ctx.beginPath(); ctx.arc(screenSsX, screenSsY, 5/galZoom, 0, Math.PI*2); ctx.fillStyle = "#ffcc00"; ctx.fill();
+                ctx.beginPath(); ctx.arc(screenSsX, screenSsY, 20/galZoom, 0, Math.PI*2); ctx.strokeStyle = "rgba(77, 168, 218, 0.8)"; ctx.lineWidth = 2/galZoom; ctx.stroke();
+                ctx.fillStyle = "white"; ctx.font = `bold ${16/galZoom}px sans-serif`; ctx.fillText("📍 Système Solaire", screenSsX + 15/galZoom, screenSsY + 5/galZoom);
+                document.getElementById('tooltip').style.opacity = 0;
+            } else {
+                ctx.scale(zoomLevel, zoomLevel);
+                let offsetX = trackedBody ? trackedBody.currentX || 0 : 0;
+                let offsetY = trackedBody ? trackedBody.currentY || 0 : 0;
+                ctx.translate(-offsetX, -offsetY);
+
+                const worldMouseX = (mouseX - width/2) / zoomLevel + offsetX;
+                const worldMouseY = (mouseY - height/2) / zoomLevel + offsetY;
+
+                stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.radius/zoomLevel, 0, Math.PI*2); ctx.fillStyle = `rgba(255,255,255,${s.alpha})`; ctx.fill(); });
+
+                if (showEcliptic) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(77, 168, 218, 0.15)';
+                    ctx.lineWidth = 1 / zoomLevel;
+                    ctx.beginPath();
+                    for (let i = -1500; i <= 1500; i += 150) {
+                        ctx.moveTo(i, -1500); ctx.lineTo(i, 1500);
+                        ctx.moveTo(-1500, i); ctx.lineTo(1500, i);
+                    }
+                    ctx.stroke();
+                    ctx.strokeStyle = 'rgba(77, 168, 218, 0.4)';
+                    ctx.beginPath(); ctx.moveTo(-1500, 0); ctx.lineTo(1500, 0); ctx.moveTo(0, -1500); ctx.lineTo(0, 1500); ctx.stroke();
+                    ctx.strokeStyle = 'rgba(255, 200, 100, 0.6)'; ctx.setLineDash([5, 5]);
+                    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(1500, 0); ctx.stroke(); ctx.setLineDash([]);
+                    ctx.fillStyle = "rgba(255, 200, 100, 0.8)"; ctx.font = `bold ${Math.max(12, 14/zoomLevel)}px sans-serif`;
+                    ctx.fillText("♈ Point Vernal (0°)", 50, -15/zoomLevel);
+                    ctx.restore();
+                }
+
+                const drawBelt = (belt) => {
+                    belt.forEach(obj => {
+                        let M = obj.baseAngle + (daysSinceJ2000 / obj.period) * Math.PI * 2;
+                        let angle = M + 2 * obj.e * Math.sin(M);
+                        const c = obj.a * obj.e, b = obj.a * Math.sqrt(1 - obj.e*obj.e);
+                        ctx.beginPath(); ctx.arc(-c + obj.a * Math.cos(angle), b * Math.sin(angle), obj.radius/zoomLevel, 0, Math.PI*2); 
+                        ctx.fillStyle = obj.color; ctx.fill();
+                    });
+                };
+                if (showAsteroids) drawBelt(asteroids);
+                if (showKuiper) drawBelt(kuiperBelt);
+
+                let earthAngle = 0, earthX = 0, earthY = 0;
+                if (planets[3]) {
+                    let M = planets[3].baseAngle + (daysSinceJ2000 / planets[3].period) * Math.PI * 2;
+                    let angle = M + 2 * planets[3].e * Math.sin(M);
+                    const c = planets[3].a * planets[3].e, b = planets[3].a * Math.sqrt(1 - planets[3].e*planets[3].e);
+                    earthX = -c + planets[3].a * Math.cos(angle);
+                    earthY = b * Math.sin(angle);
+                    earthAngle = Math.atan2(earthY, earthX);
+                }
+
+                planets.forEach((p, index) => {
+                    let x = 0, y = 0;
+                    p.isOpposition = false;
+                    p.isElongation = false;
+                    p.isVisibleLocal = false;
+
+                    if (index > 0) {
+                        let M = p.baseAngle + (daysSinceJ2000 / p.period) * Math.PI * 2;
+                        p.angle = M + 2 * p.e * Math.sin(M); 
+
+                        const c = p.a * p.e, b = p.a * Math.sqrt(1 - p.e*p.e);
+                        let rot = p.omega || 0;
+                        let cx = -c * Math.cos(rot);
+                        let cy = -c * Math.sin(rot);
+
+                        if (showOrbits) {
+                            ctx.beginPath(); ctx.ellipse(cx, cy, p.a, b, rot, 0, Math.PI*2);
+                            ctx.strokeStyle = p.e > 0.9 ? 'rgba(204,238,255,0.4)' : 'rgba(255,255,255,0.4)';
+                            ctx.setLineDash([4, 6]); ctx.lineWidth = 1.5/zoomLevel; ctx.stroke(); ctx.setLineDash([]); 
+                        }
+                        
+                        let localX = -c + p.a * Math.cos(p.angle);
+                        let localY = b * Math.sin(p.angle);
+                        x = localX * Math.cos(rot) - localY * Math.sin(rot);
+                        y = localX * Math.sin(rot) + localY * Math.cos(rot);
+
+                        if (!isPaused) {
+                            p.history.push({x, y});
+                            if (p.history.length > (p.a > 300 ? 150 : 60)) p.history.shift(); 
+                        }
+                        if (p.history.length > 1) {
+                            ctx.beginPath(); p.history.forEach((pt, i) => i===0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
+                            ctx.strokeStyle = p.color; ctx.globalAlpha = 0.6; ctx.lineWidth = 2/zoomLevel; ctx.stroke(); ctx.globalAlpha = 1.0; 
+                        }
+
+                        if (index !== 3) {
+                            let geoX = x - earthX;
+                            let geoY = y - earthY;
+                            let lambda = Math.atan2(geoY, geoX); 
+                            let eps = 23.44 * Math.PI / 180;
+                            let dec = Math.asin(Math.sin(lambda) * Math.sin(eps));
+                            let ra = Math.atan2(Math.sin(lambda) * Math.cos(eps), Math.cos(lambda));
+                            let ha = lstRad - ra;
+                            let sinAlt = Math.sin(obsLat) * Math.sin(dec) + Math.cos(obsLat) * Math.cos(dec) * Math.cos(ha);
+                            p.isVisibleLocal = sinAlt > 0;
+                        }
+
+                        if (index >= 4) { 
+                            let pAngle = Math.atan2(y, x);
+                            let diff = Math.abs(earthAngle - pAngle);
+                            diff = diff % (Math.PI * 2);
+                            if (diff > Math.PI) diff = Math.PI * 2 - diff;
+                            if (diff < 0.05) { 
+                                p.isOpposition = true;
+                                ctx.beginPath(); ctx.moveTo(earthX, earthY); ctx.lineTo(x, y);
+                                ctx.strokeStyle = "rgba(255, 255, 255, 0.4)"; ctx.setLineDash([5, 5]); ctx.lineWidth = 1.5 / zoomLevel; ctx.stroke(); ctx.setLineDash([]);
+                                ctx.fillStyle = "#ffcc00"; ctx.font = `bold ${Math.max(10, 12/zoomLevel)}px sans-serif`; ctx.fillText("✨", x, y - p.radius - 8);
+                            }
+                        } else if (index === 1 || index === 2) { 
+                            let psX = -x, psY = -y; 
+                            let peX = earthX - x, peY = earthY - y; 
+                            let dot = psX * peX + psY * peY; 
+                            let magPS = Math.hypot(psX, psY);
+                            let magPE = Math.hypot(peX, peY);
+                            let cosTheta = dot / (magPS * magPE);
+                            if (Math.abs(cosTheta) < 0.05) { 
+                                p.isElongation = true;
+                                ctx.beginPath(); ctx.moveTo(earthX, earthY); ctx.lineTo(x, y);
+                                ctx.strokeStyle = "rgba(255, 200, 100, 0.4)"; ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5 / zoomLevel; ctx.stroke(); ctx.setLineDash([]);
+                                ctx.fillStyle = "#ffaa00"; ctx.font = `bold ${Math.max(10, 12/zoomLevel)}px sans-serif`; ctx.fillText("🌅", x, y - p.radius - 8);
+                            }
+                        }
+                    } else if (index === 0) {
+                        let lambdaSun = Math.atan2(-earthY, -earthX);
+                        let eps = 23.44 * Math.PI / 180;
+                        let dec = Math.asin(Math.sin(lambdaSun) * Math.sin(eps));
+                        let ra = Math.atan2(Math.sin(lambdaSun) * Math.cos(eps), Math.cos(lambdaSun));
+                        let ha = lstRad - ra;
+                        let sinAlt = Math.sin(obsLat) * Math.sin(dec) + Math.cos(obsLat) * Math.cos(dec) * Math.cos(ha);
+                        p.isVisibleLocal = sinAlt > 0;
+                    }
+
+                    p.currentX = x; p.currentY = y;
+                    
+                    // NOUVEAU CALCUL DES HITBOXES
+                    let distToP = Math.hypot(worldMouseX - x, worldMouseY - y);
+                    let pHitbox = Math.max((p.radius/zoomLevel) + 15, 25);
+                    if (distToP < pHitbox) {
+                        // Le score est la distance à la SURFACE (et non au centre)
+                        let scoreP = distToP - (p.radius/zoomLevel); 
+                        if (scoreP < minHoverScore) {
+                            hoveredPlanet = p;
+                            minHoverScore = scoreP;
+                        }
+                    }
+
+                    ctx.beginPath(); ctx.arc(x, y, p.radius, 0, Math.PI*2);
+                    if (index === 0) { ctx.shadowBlur = 50; ctx.shadowColor = p.color; }
+                    ctx.fillStyle = p.color; ctx.fill(); ctx.shadowBlur = 0;
+
+                    if (p.moons) {
+                        p.moons.forEach(m => {
+                            let mM = m.baseAngle + (daysSinceJ2000 / m.period) * Math.PI * 2;
+                            const mX = x + Math.cos(mM) * m.dist, mY = y + Math.sin(mM) * m.dist;
+                            m.currentX = mX; m.currentY = mY;
+                            
+                            if (showOrbits) { ctx.beginPath(); ctx.arc(x, y, m.dist, 0, Math.PI*2); ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.setLineDash([2,4]); ctx.lineWidth=1/zoomLevel; ctx.stroke(); ctx.setLineDash([]); }
+                            ctx.beginPath(); ctx.arc(mX, mY, m.radius, 0, Math.PI*2); ctx.fillStyle = m.color; ctx.fill();
+                            
+                            // NOUVEAU CALCUL POUR LA LUNE
+                            let distToM = Math.hypot(worldMouseX - mX, worldMouseY - mY);
+                            let mHitbox = Math.max((m.radius/zoomLevel) + 10, 20);
+                            if (distToM < mHitbox) {
+                                let scoreM = distToM - (m.radius/zoomLevel);
+                                if (scoreM < minHoverScore) {
+                                    hoveredPlanet = m;
+                                    minHoverScore = scoreM;
+                                }
+                            }
+                        });
+                    }
+                    ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.font = `${Math.max(8, 11/zoomLevel)}px sans-serif`;
+                    ctx.fillText(p.name, x + p.radius + 4, y + 4);
+                });
+
+                const tooltip = document.getElementById('tooltip');
+                if (hoveredPlanet && mouseX !== -1000 && !infoPanel.classList.contains('active')) {
+                    tooltip.style.opacity = 1; tooltip.style.left = (mouseX + 15) + 'px'; tooltip.style.top = (mouseY - 60) + 'px';
+                    document.getElementById('tt-name').innerText = hoveredPlanet.name; document.getElementById('tt-name').style.color = hoveredPlanet.color;
+                    
+                    if (hoveredPlanet.e !== undefined) {
+                        document.getElementById('tt-line1').style.display = document.getElementById('tt-line2').style.display = 'block';
+                        document.getElementById('tt-dist').innerText = hoveredPlanet.realDist; document.getElementById('tt-ecc').innerText = hoveredPlanet.e;
+                    } else {
+                        document.getElementById('tt-line1').style.display = 'block'; document.getElementById('tt-line2').style.display = 'none';
+                        document.getElementById('tt-dist').innerText = hoveredPlanet.realDist || "-";
+                    }
+
+                    const horizonLine = document.getElementById('tt-line-horizon');
+                    if (hoveredPlanet.name !== "Terre" && hoveredPlanet.name !== "Lune") {
+                        horizonLine.style.display = 'block';
+                        if (hoveredPlanet.isVisibleLocal) {
+                            horizonLine.innerHTML = "🔭 <span style='color:#aaddff;'>Visible dans le ciel</span>";
+                        } else {
+                            horizonLine.innerHTML = "⛰️ <span style='color:#777777;'>Sous l'horizon</span>";
+                        }
+                    } else {
+                        horizonLine.style.display = 'none';
+                    }
+
+                    if (hoveredPlanet.isOpposition) {
+                        document.getElementById('tt-line3').style.display = 'block';
+                        document.getElementById('tt-line3').innerHTML = "✨ <span style='color:#ffcc00;'>En Opposition !</span>";
+                    } else if (hoveredPlanet.isElongation) {
+                        document.getElementById('tt-line3').style.display = 'block';
+                        document.getElementById('tt-line3').innerHTML = "🌅 <span style='color:#ffaa00;'>Élongation maximale</span>";
+                    } else {
+                        document.getElementById('tt-line3').style.display = 'none';
+                    }
+
+                    canvas.style.cursor = 'pointer';
+                } else { tooltip.style.opacity = 0; canvas.style.cursor = 'default'; }
+            }
+            ctx.restore(); requestAnimationFrame(draw);
+        }
+        draw();
+    </script>
+</body>
+</html>
