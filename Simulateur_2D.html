@@ -289,9 +289,37 @@
             }
         }
 
+    let initialPinchDistance = null;
+    let initialZoom = zoomLevel;
+
         canvas.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
         canvas.addEventListener('mousedown', e => updateInteraction(e.clientX, e.clientY));
-        canvas.addEventListener('touchstart', e => { mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; setTimeout(() => updateInteraction(mouseX, mouseY), 50); }, { passive: true });
+    canvas.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) {
+            mouseX = e.touches[0].clientX;
+            mouseY = e.touches[0].clientY;
+            setTimeout(() => updateInteraction(mouseX, mouseY), 50);
+        } else if (e.touches.length === 2) {
+            initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            initialZoom = zoomLevel;
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', e => {
+        if (e.touches.length === 1) {
+            mouseX = e.touches[0].clientX;
+            mouseY = e.touches[0].clientY;
+        } else if (e.touches.length === 2 && initialPinchDistance !== null) {
+            e.preventDefault();
+            const currentDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            const factor = currentDist / initialPinchDistance;
+            zoomLevel = Math.max(0.15, Math.min(6.0, initialZoom * factor));
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', e => {
+        if (e.touches.length < 2) initialPinchDistance = null;
+    });
 
         function draw() {
             ctx.fillStyle = '#020205'; ctx.fillRect(0, 0, width, height);
