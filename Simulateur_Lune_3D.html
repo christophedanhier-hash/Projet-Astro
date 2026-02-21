@@ -23,12 +23,15 @@
             <div class="info-box">
                 <span class="highlight">Phase :</span> <span id="moon-phase">-</span><br>
                 <span class="highlight">Distance :</span> 384 400 km<br>
-                <span class="highlight">Rotation :</span> Synchrone
+                <span class="highlight">Rotation :</span> Synchrone<br>
+                <span class="highlight">Lieu :</span> <span id="selected-sea">Aucun</span><br>
+                <span class="highlight">Syzygie :</span> <span id="syzygy-status">Non</span>
             </div>
         </div>
         <div class="control-group">
             <label style="font-size: 0.8rem;">Éclairage Solaire (Phase) :</label>
             <input type="range" id="phase-slider" min="0" max="6.28" step="0.01" value="0">
+            <button id="auto-align-btn" style="margin-top: 5px; background: #ffcc00; color: #050510;">✨ Auto-alignement</button>
         </div>
         <a href="index.html" style="text-decoration:none;"><button>🏠 Retour Accueil</button></a>
     </div>
@@ -64,14 +67,69 @@
 
         // --- LA LUNE ---
         const moonGeo = new THREE.SphereGeometry(10, 64, 64);
-        const moonMat = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0 });
+        const moonMat = new THREE.MeshStandardMaterial({ 
+            roughness: 1, 
+            metalness: 0,
+            bumpScale: 0.8 // Ajustez cette valeur pour accentuer ou réduire le relief
+        });
         const moon = new THREE.Mesh(moonGeo, moonMat);
         moon.receiveShadow = true;
         scene.add(moon);
 
         textureLoader.load(CDN_URL + 'moon_1024.jpg', (tex) => {
             moonMat.map = tex;
+            moonMat.bumpMap = tex; // Utilisation de la texture principale comme carte de relief
             moonMat.needsUpdate = true;
+        });
+
+        // --- MARQUEURS DES MERS LUNAIRES ---
+        const lunarSeas = [
+            { name: "Mer de la Tranquillité", lat: 8.5, lon: 31.4 },
+            { name: "Mer de la Sérénité", lat: 28.0, lon: 17.5 },
+            { name: "Mer des Pluies", lat: 32.8, lon: -15.6 },
+            { name: "Mer des Crises", lat: 17.0, lon: 59.1 },
+            { name: "Océan des Tempêtes", lat: 18.4, lon: -57.4 },
+            { name: "Mer de la Fécondité", lat: -7.8, lon: 51.3 },
+            { name: "Mer du Nectar", lat: -15.2, lon: 35.5 },
+            { name: "Mer des Nuées", lat: -19.1, lon: -15.0 }
+        ];
+
+        const markerGroup = new THREE.Group();
+        scene.add(markerGroup);
+
+        function latLonToVector3(lat, lon, radius) {
+            const phi = lat * (Math.PI / 180);
+            const theta = lon * (Math.PI / 180);
+            return new THREE.Vector3(
+                radius * Math.cos(phi) * Math.sin(theta),
+                radius * Math.sin(phi),
+                radius * Math.cos(phi) * Math.cos(theta)
+            );
+        }
+
+        lunarSeas.forEach(sea => {
+            const pos = latLonToVector3(sea.lat, sea.lon, 10.2); // Légèrement au-dessus de la surface (radius=10)
+            const markerGeo = new THREE.SphereGeometry(0.3, 16, 16);
+            const markerMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.8 });
+            const marker = new THREE.Mesh(markerGeo, markerMat);
+            marker.position.copy(pos);
+            marker.userData = sea;
+            markerGroup.add(marker);
+        });
+
+        // --- INTERACTION (CLIC) ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const selectedSeaText = document.getElementById('selected-sea');
+
+        window.addEventListener('click', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(markerGroup.children);
+            if (intersects.length > 0) {
+                selectedSeaText.innerText = intersects[0].object.userData.name;
+            }
         });
 
         // --- LA TERRE (en arrière-plan) ---
@@ -101,6 +159,39 @@
         // --- LOGIQUE DES PHASES ---
         const phaseSlider = document.getElementById('phase-slider');
         const phaseText = document.getElementById('moon-phase');
+        const syzygyText = document.getElementById('syzygy-status');
+
+        // --- AUTO-ALIGNEMENT ---
+        document.getElementById('auto-align-btn').addEventListener('click', () => {
+            const currentEarthAngle = (Date.now() * 0.0001) % (Math.PI * 2);
+            const currentSunAngle = parseFloat(phaseSlider.value);
+            
+            const t1 = currentEarthAngle; // Cible : Nouvelle Lune (Conjonction)
+            const t2 = (currentEarthAngle + Math.PI) % (Math.PI * 2); // Cible : Pleine Lune (Opposition)
+            
+            // On calcule la distance la plus courte vers l'un des deux points d'alignement
+            const d1 = Math.min(Math.abs(currentSunAngle - t1), 2 * Math.PI - Math.abs(currentSunAngle - t1));
+            const d2 = Math.min(Math.abs(currentSunAngle - t2), 2 * Math.PI - Math.abs(currentSunAngle - t2));
+            
+            phaseSlider.value = (d1 < d2 ? t1 : t2).toFixed(2);
+        });
+
+        function checkSyzygy(sunAngle, earthAngle) {
+            // Calcul de la différence d'angle entre le Soleil et la Terre par rapport à la Lune
+            const diff = Math.abs(sunAngle - earthAngle) % Math.PI;
+            const threshold = 0.1; // Tolérance d'alignement (environ 5.7 degrés)
+
+            if (diff < threshold) {
+                syzygyText.innerText = "Oui (Conjonction)";
+                syzygyText.style.color = "#ffcc00";
+            } else if (diff > Math.PI - threshold) {
+                syzygyText.innerText = "Oui (Opposition)";
+                syzygyText.style.color = "#ffcc00";
+            } else {
+                syzygyText.innerText = "Non";
+                syzygyText.style.color = "#fff";
+            }
+        }
 
         function updatePhaseText(angle) {
             const normAngle = (angle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
@@ -124,9 +215,13 @@
 
             // Rotation synchrone (la Lune présente toujours la même face à la Terre)
             // Ici, on fait tourner la Terre autour de la Lune pour le visuel
-            earth.position.x = Math.cos(Date.now() * 0.0001) * 300;
-            earth.position.z = Math.sin(Date.now() * 0.0001) * 300;
+            const earthAngle = Date.now() * 0.0001;
+            earth.position.x = Math.cos(earthAngle) * 300;
+            earth.position.z = Math.sin(earthAngle) * 300;
             earth.rotation.y += 0.002;
+
+            // Vérification de l'alignement Terre-Lune-Soleil
+            checkSyzygy(angle, earthAngle);
 
             controls.update();
             renderer.render(scene, camera);
@@ -136,6 +231,14 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(markerGroup.children);
+            renderer.domElement.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
         });
 
         animate();
