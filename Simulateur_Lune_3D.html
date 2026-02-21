@@ -46,6 +46,10 @@
             <input type="checkbox" id="syzygy-line-cb" checked>
             <label for="syzygy-line-cb">Afficher ligne de syzygie</label>
         </div>
+        <div class="control-group checkbox-group">
+            <input type="checkbox" id="toggle-markers-cb" checked>
+            <label for="toggle-markers-cb">Afficher les sites lunaires</label>
+        </div>
         <a href="index.html" style="text-decoration:none;"><button>🏠 Retour Accueil</button></a>
     </div>
 
@@ -128,6 +132,10 @@
             marker.position.copy(pos);
             marker.userData = sea;
             markerGroup.add(marker);
+        });
+
+        document.getElementById('toggle-markers-cb').addEventListener('change', (e) => {
+            markerGroup.visible = e.target.checked;
         });
 
         // --- INTERACTION (CLIC) ---
@@ -240,25 +248,24 @@
         });
 
         function updateSyzygyAndEclipse(sunAngle, earthAngle) {
-            // Calcul de la différence d'angle entre le Soleil et la Terre par rapport à la Lune
-            const diff = Math.abs(sunAngle - earthAngle) % Math.PI;
-            const threshold = 0.1; // Tolérance d'alignement (environ 5.7 degrés)
-            const isAligned = (diff < threshold || diff > Math.PI - threshold);
+            const rawDiff = Math.abs(sunAngle - earthAngle) % (Math.PI * 2);
+            const diff = Math.min(rawDiff, Math.abs(rawDiff - Math.PI), Math.abs(rawDiff - 2 * Math.PI));
+            const threshold = 0.15;
+            const alignmentFactor = Math.max(0, 1 - (diff / threshold));
+            const isAligned = diff < threshold;
 
-            // 1. Mise à jour du texte et de la ligne
-            if (diff < threshold) { // Conjonction (Terre entre Soleil et Lune -> Éclipse Lunaire)
-                syzygyText.innerText = "Oui (Conjonction)";
+            if (isAligned) {
                 syzygyText.style.color = "#ffcc00";
-                
-                // Simulation de l'éclipse (assombrissement et teinte rouge)
-                const eclipseFactor = Math.max(0, diff / threshold); // 0 au centre, 1 au bord
-                sunLight.intensity = 0.2 + 1.8 * eclipseFactor;
-                sunLight.color.setRGB(1, 0.4 + 0.6 * eclipseFactor, 0.4 + 0.6 * eclipseFactor);
-            } else if (diff > Math.PI - threshold) {
-                syzygyText.innerText = "Oui (Opposition)";
-                syzygyText.style.color = "#ffcc00";
-                sunLight.intensity = 2;
-                sunLight.color.setHex(0xffffff);
+                if (rawDiff < Math.PI/2 || rawDiff > 1.5*Math.PI) {
+                    syzygyText.innerText = "Oui (Conjonction)";
+                    // Éclipse Lunaire (Terre entre Soleil et Lune)
+                    sunLight.intensity = 2.0 - (1.8 * alignmentFactor);
+                    sunLight.color.setRGB(1, 1 - 0.6 * alignmentFactor, 1 - 0.6 * alignmentFactor);
+                } else {
+                    syzygyText.innerText = "Oui (Opposition)";
+                    sunLight.intensity = 2;
+                    sunLight.color.setHex(0xffffff);
+                }
             } else {
                 syzygyText.innerText = "Non";
                 syzygyText.style.color = "#fff";
@@ -266,11 +273,11 @@
                 sunLight.color.setHex(0xffffff);
             }
 
-            // 2. Gestion visuelle de la ligne de syzygie
-            if (isAligned && syzygyLineCb.checked) {
+            if (syzygyLineCb.checked) {
+                syzygyLine.visible = true;
+                syzygyLineMat.opacity = 0.1 + 0.7 * alignmentFactor;
                 const sunPosVirtual = sunLight.position.clone().normalize().multiplyScalar(500);
                 syzygyLineGeo.setFromPoints([sunPosVirtual, new THREE.Vector3(0,0,0), earth.position]);
-                syzygyLine.visible = true;
             } else {
                 syzygyLine.visible = false;
             }
@@ -292,15 +299,17 @@
             requestAnimationFrame(animate);
             
             const earthAngle = Date.now() * 0.0001;
+            let sunAngle;
 
             if (isAutoFollowing) {
-                phaseSlider.value = ((earthAngle + followOffset) % (Math.PI * 2)).toFixed(2);
+                sunAngle = (earthAngle + followOffset) % (Math.PI * 2);
+                phaseSlider.value = sunAngle.toFixed(2);
+            } else {
+                sunAngle = parseFloat(phaseSlider.value);
             }
 
-            // Position du soleil basée sur le slider
-            const angle = parseFloat(phaseSlider.value);
-            sunLight.position.set(Math.cos(angle) * 100, 0, Math.sin(angle) * 100);
-            updatePhaseText(angle);
+            sunLight.position.set(Math.cos(sunAngle) * 100, 0, Math.sin(sunAngle) * 100);
+            updatePhaseText(sunAngle);
 
             // Rotation synchrone (la Lune présente toujours la même face à la Terre)
             // Ici, on fait tourner la Terre autour de la Lune pour le visuel
@@ -309,7 +318,7 @@
             earth.rotation.y += 0.002;
 
             // Vérification de l'alignement Terre-Lune-Soleil
-            updateSyzygyAndEclipse(angle, earthAngle);
+            updateSyzygyAndEclipse(sunAngle, earthAngle);
 
             // Mise à jour de la ligne de force
             if (forceLine.visible) {
