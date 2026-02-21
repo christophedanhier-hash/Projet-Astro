@@ -65,6 +65,12 @@
                 </div>
                 <div class="control-group">
                     <div class="btn-group">
+                        <button id="zoom-in-btn">🔍 +</button>
+                        <button id="zoom-out-btn">🔍 -</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="btn-group">
                         <button id="pause-btn">Mettre en pause</button>
                     </div>
                     <button id="night-mode-btn" style="margin-top: 5px;">🔴 Nuit</button>
@@ -329,6 +335,20 @@
         
         let speed = 1, isPaused = false;
         document.getElementById('speed-slider').addEventListener('input', e => { speed = parseFloat(e.target.value); document.getElementById('speed-display').innerText = speed + " j/sec"; });
+        
+        document.getElementById('zoom-in-btn').addEventListener('click', () => {
+            const dist = camera.position.distanceTo(controls.target);
+            const newDist = dist / 1.3;
+            const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+            camera.position.copy(controls.target).addScaledVector(direction, newDist);
+        });
+        document.getElementById('zoom-out-btn').addEventListener('click', () => {
+            const dist = camera.position.distanceTo(controls.target);
+            const newDist = dist * 1.3;
+            const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+            camera.position.copy(controls.target).addScaledVector(direction, Math.min(newDist, controls.maxDistance));
+        });
+
         document.getElementById('pause-btn').addEventListener('click', e => { isPaused = !isPaused; e.target.innerText = isPaused ? "Reprendre" : "Mettre en pause"; });
         document.getElementById('toggle-ecliptic').addEventListener('change', e => eclipticGrid.visible = e.target.checked);
         document.getElementById('toggle-orbits').addEventListener('change', e => orbitesMeshes.forEach(o => o.visible = e.target.checked));
