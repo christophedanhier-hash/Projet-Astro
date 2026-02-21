@@ -124,8 +124,8 @@
         controls.enableDamping = true;
         controls.maxDistance = 60000; // Permet de reculer énormément pour voir la galaxie entière
 
-        scene.add(new THREE.PointLight(0xffffff, 4000, 0, 0)); 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.8)); 
+        scene.add(new THREE.PointLight(0xffffff, 2500, 0, 0)); 
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6)); 
 
         const textureLoader = new THREE.TextureLoader();
         textureLoader.setCrossOrigin('anonymous'); 
@@ -281,6 +281,13 @@
             mesh.userData = { id: i, isMoon: false, ref: p };
             group.add(mesh); cliquables.push(mesh);
             p.meshRef = mesh; p.groupRef = group;
+
+            // Initialisation des traînées (trails) pour les planètes
+            if (i > 0) {
+                p.trailGeometry = new THREE.BufferGeometry();
+                p.trailMesh = new THREE.Line(p.trailGeometry, new THREE.LineBasicMaterial({ color: new THREE.Color(p.color), transparent: true, opacity: 0.5 }));
+                scene.add(p.trailMesh);
+            }
 
             if (p.name === "Saturne") {
                 const ring = new THREE.Mesh(new THREE.RingGeometry(18, 28, 64), new THREE.MeshStandardMaterial({ color: 0xaa9977, side: THREE.DoubleSide, transparent: true, opacity: 0.8 }));
@@ -446,6 +453,14 @@
                 if (i > 0) {
                     const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, daysSinceJ2000);
                     p.groupRef.position.set(pos.x, 0, pos.y); p.meshRef.rotation.y += 0.01; if (i === 3) posTerre.set(pos.x, 0, pos.y); 
+                    
+                    // Mise à jour de l'historique et de la traînée
+                    if (!isPaused) {
+                        p.history.push(new THREE.Vector3(pos.x, 0, pos.y));
+                        if (p.history.length > 200) p.history.shift();
+                        p.trailGeometry.setFromPoints(p.history);
+                    }
+
                     if (p.moons) { p.moons.forEach(m => { let M = m.baseAngle + (daysSinceJ2000 / m.period) * Math.PI * 2; m.meshRef.position.set(Math.cos(M)*m.dist, 0, Math.sin(M)*m.dist); }); }
                 } else { p.meshRef.rotation.y += 0.002; }
             });
