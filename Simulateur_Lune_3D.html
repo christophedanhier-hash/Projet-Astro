@@ -217,6 +217,8 @@
 
         let isAutoFollowing = false;
         let followOffset = 0; // 0 pour Conjonction, PI pour Opposition
+        let isTransitioning = false;
+        let targetSunAngle = 0;
 
         autoFollowCb.addEventListener('change', (e) => {
             isAutoFollowing = e.target.checked;
@@ -232,8 +234,13 @@
             }
         });
 
+        phaseSlider.addEventListener('input', () => {
+            isTransitioning = false;
+        });
+
         // --- AUTO-ALIGNEMENT ---
         document.getElementById('auto-align-btn').addEventListener('click', () => {
+            if (isAutoFollowing) return;
             const currentEarthAngle = (Date.now() * 0.0001) % (Math.PI * 2);
             const currentSunAngle = parseFloat(phaseSlider.value);
             
@@ -244,7 +251,8 @@
             const d1 = Math.min(Math.abs(currentSunAngle - t1), 2 * Math.PI - Math.abs(currentSunAngle - t1));
             const d2 = Math.min(Math.abs(currentSunAngle - t2), 2 * Math.PI - Math.abs(currentSunAngle - t2));
             
-            phaseSlider.value = (d1 < d2 ? t1 : t2).toFixed(2);
+            targetSunAngle = (d1 < d2 ? t1 : t2);
+            isTransitioning = true;
         });
 
         function updateSyzygyAndEclipse(sunAngle, earthAngle) {
@@ -303,6 +311,21 @@
 
             if (isAutoFollowing) {
                 sunAngle = (earthAngle + followOffset) % (Math.PI * 2);
+                phaseSlider.value = sunAngle.toFixed(2);
+                isTransitioning = false;
+            } else if (isTransitioning) {
+                let current = parseFloat(phaseSlider.value);
+                let diff = targetSunAngle - current;
+                // Ajustement pour le chemin le plus court (wrap around 0/2PI)
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+
+                if (Math.abs(diff) < 0.01) {
+                    sunAngle = targetSunAngle;
+                    isTransitioning = false;
+                } else {
+                    sunAngle = current + diff * 0.05; // Facteur de lissage (0.05)
+                }
                 phaseSlider.value = sunAngle.toFixed(2);
             } else {
                 sunAngle = parseFloat(phaseSlider.value);
