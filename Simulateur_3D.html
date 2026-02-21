@@ -124,8 +124,8 @@
         controls.enableDamping = true;
         controls.maxDistance = 60000; // Permet de reculer énormément pour voir la galaxie entière
 
-        scene.add(new THREE.PointLight(0xffffff, 2500, 0, 0)); 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6)); 
+        scene.add(new THREE.PointLight(0xffffff, 1800, 0, 0)); // Éclairage plus doux
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7)); // Ombres moins "opaques" (plus débouchées)
 
         const textureLoader = new THREE.TextureLoader();
         textureLoader.setCrossOrigin('anonymous'); 
@@ -143,7 +143,7 @@
         // --- NOUVEAU : LA GALAXIE À L'ÉCHELLE ---
         const galaxyGroup = new THREE.Group();
         // Position du Centre Galactique (Très loin de nous)
-        const GALAXY_CENTER = new THREE.Vector3(15000, -2000, -10000);
+        const GALAXY_CENTER = new THREE.Vector3(16355, -2000, -12218);
         galaxyGroup.position.copy(GALAXY_CENTER);
         // Légère inclinaison pour un angle de vue spectaculaire
         galaxyGroup.rotation.x = 0.15;
@@ -160,12 +160,12 @@
         const numStars = 50000;
         const galaxyRadius = 35000;
         const arms = 4;
-        const spin = 3.5;
+        const spin = 7.0; // Plus de torsion pour correspondre à la structure réelle et à la 2D
 
         for (let i = 0; i < numStars; i++) {
             // Plus d'étoiles vers le centre
             const r = Math.pow(Math.random(), 1.5) * galaxyRadius; 
-            const branchAngle = ((i % arms) / arms) * Math.PI * 2;
+            const branchAngle = (Math.floor(Math.random() * arms) / arms) * Math.PI * 2;
             const spinAngle = r * (spin / galaxyRadius);
             
             // Dispersion : le centre est dense, les bras sont flous
@@ -189,7 +189,7 @@
         galaxyGeo.setAttribute('color', new THREE.Float32BufferAttribute(galaxyColors, 3));
         
         const galaxyMat = new THREE.PointsMaterial({ 
-            size: 60, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false
+            size: 40, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false
         });
         galaxyMat.userData = { baseOpacity: 0.8 }; // Mémoire pour la transition
         galaxyGroup.add(new THREE.Points(galaxyGeo, galaxyMat));
