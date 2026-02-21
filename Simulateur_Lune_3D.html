@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Exploration Lunaire 3D</title>
+    <style>
+        html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#020205;font-family:sans-serif;color:#fff;touch-action:none}
+        #ui-container{position:absolute;top:10px;left:10px;background:rgba(10,15,30,.85);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);z-index:10;backdrop-filter:blur(4px);max-width:220px;}
+        h1{margin:0 0 10px;font-size:1rem;color:#4da8da;text-transform:uppercase}
+        .control-group{margin-bottom:10px;display:flex;flex-direction:column;gap:5px}
+        button{background:#4da8da;color:#050510;border:none;padding:8px;border-radius:5px;cursor:pointer;font-weight:bold;width:100%; transition: 0.3s;}
+        button:hover{background:#79c2ea}
+        .info-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; font-size: 0.85rem; line-height: 1.4; border: 1px solid rgba(77,168,218,0.2); }
+        .highlight { color: #4da8da; font-weight: bold; }
+        canvas{display:block;width:100%;height:100%}
+    </style>
+</head>
+<body>
+    <div id="ui-container">
+        <h1>Exploration Lunaire</h1>
+        <div class="control-group">
+            <div class="info-box">
+                <span class="highlight">Phase :</span> <span id="moon-phase">-</span><br>
+                <span class="highlight">Distance :</span> 384 400 km<br>
+                <span class="highlight">Rotation :</span> Synchrone
+            </div>
+        </div>
+        <div class="control-group">
+            <label style="font-size: 0.8rem;">Éclairage Solaire (Phase) :</label>
+            <input type="range" id="phase-slider" min="0" max="6.28" step="0.01" value="0">
+        </div>
+        <a href="index.html" style="text-decoration:none;"><button>🏠 Retour Accueil</button></a>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'https://esm.sh/three@0.160.0';
+        import { OrbitControls } from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 10000);
+        camera.position.set(0, 20, 50);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // Lumière du Soleil (Directionnelle pour créer des phases nettes)
+        const sunLight = new THREE.DirectionalLight(0xffffff, 2);
+        sunLight.position.set(100, 0, 0);
+        sunLight.castShadow = true;
+        scene.add(sunLight);
+
+        // Lumière cendrée (faible lumière reflétée par la Terre)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.05);
+        scene.add(ambientLight);
+
+        const textureLoader = new THREE.TextureLoader();
+        const CDN_URL = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/';
+
+        // --- LA LUNE ---
+        const moonGeo = new THREE.SphereGeometry(10, 64, 64);
+        const moonMat = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0 });
+        const moon = new THREE.Mesh(moonGeo, moonMat);
+        moon.receiveShadow = true;
+        scene.add(moon);
+
+        textureLoader.load(CDN_URL + 'moon_1024.jpg', (tex) => {
+            moonMat.map = tex;
+            moonMat.needsUpdate = true;
+        });
+
+        // --- LA TERRE (en arrière-plan) ---
+        const earthGeo = new THREE.SphereGeometry(36, 64, 64);
+        const earthMat = new THREE.MeshStandardMaterial({ roughness: 1 });
+        const earth = new THREE.Mesh(earthGeo, earthMat);
+        earth.position.set(-200, 0, -100); // Distance arbitraire pour le visuel
+        scene.add(earth);
+
+        textureLoader.load(CDN_URL + 'earth_atmos_2048.jpg', (tex) => {
+            earthMat.map = tex;
+            earthMat.needsUpdate = true;
+        });
+
+        // --- FOND ÉTOILÉ ---
+        const starGeo = new THREE.BufferGeometry();
+        const starPos = [];
+        for(let i=0; i<3000; i++) {
+            const r = 2000;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            starPos.push(r*Math.sin(phi)*Math.cos(theta), r*Math.sin(phi)*Math.sin(theta), r*Math.cos(phi));
+        }
+        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+        scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 1})));
+
+        // --- LOGIQUE DES PHASES ---
+        const phaseSlider = document.getElementById('phase-slider');
+        const phaseText = document.getElementById('moon-phase');
+
+        function updatePhaseText(angle) {
+            const normAngle = (angle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+            if (normAngle < 0.4 || normAngle > 5.9) phaseText.innerText = "Nouvelle Lune";
+            else if (normAngle < 1.2) phaseText.innerText = "Premier Croissant";
+            else if (normAngle < 1.9) phaseText.innerText = "Premier Quartier";
+            else if (normAngle < 2.7) phaseText.innerText = "Gibbeuse Croissante";
+            else if (normAngle < 3.5) phaseText.innerText = "Pleine Lune";
+            else if (normAngle < 4.3) phaseText.innerText = "Gibbeuse Décroissante";
+            else if (normAngle < 5.1) phaseText.innerText = "Dernier Quartier";
+            else phaseText.innerText = "Dernier Croissant";
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Position du soleil basée sur le slider
+            const angle = parseFloat(phaseSlider.value);
+            sunLight.position.set(Math.cos(angle) * 100, 0, Math.sin(angle) * 100);
+            updatePhaseText(angle);
+
+            // Rotation synchrone (la Lune présente toujours la même face à la Terre)
+            // Ici, on fait tourner la Terre autour de la Lune pour le visuel
+            earth.position.x = Math.cos(Date.now() * 0.0001) * 300;
+            earth.position.z = Math.sin(Date.now() * 0.0001) * 300;
+            earth.rotation.y += 0.002;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
