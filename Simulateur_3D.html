@@ -64,11 +64,15 @@
                     <input type="range" id="speed-slider" min="-10" max="10" step="0.5" value="1">
                 </div>
                 <div class="control-group">
-                    <button id="pause-btn">Mettre en pause</button>
+                    <div class="btn-group">
+                        <button id="pause-btn">Mettre en pause</button>
+                    </div>
                     <button id="night-mode-btn" style="margin-top: 5px;">🔴 Nuit</button>
                 </div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-ecliptic"><label for="toggle-ecliptic">Grille Écliptique</label></div>
                 <div class="control-group checkbox-group"><input type="checkbox" id="toggle-orbits" checked><label for="toggle-orbits">Orbites</label></div>
-                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-asteroids" checked><label for="toggle-asteroids">Ceintures</label></div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-asteroids" checked><label for="toggle-asteroids">Ceinture principale</label></div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-kuiper" checked><label for="toggle-kuiper">Ceinture de Kuiper</label></div>
             </div>
         </div>
         <button id="toggle-ui-btn">👁️ Masquer l'interface</button>
@@ -210,6 +214,13 @@
         orionLabel.position.y += 1000;
         galaxyGroup.add(orionLabel);
 
+        // --- GRILLE ÉCLIPTIQUE ---
+        const eclipticGrid = new THREE.GridHelper(3000, 20, 0x4da8da, 0x1a2535);
+        eclipticGrid.material.opacity = 0.2;
+        eclipticGrid.material.transparent = true;
+        eclipticGrid.visible = false;
+        scene.add(eclipticGrid);
+
 
         // --- MATHÉMATIQUES SYSTÈME SOLAIRE ---
         const J2000 = new Date('2000-01-01T12:00:00Z');
@@ -225,11 +236,14 @@
             { name: "Terre", color: 0x4b90d1, tex: 'earth_atmos_2048.jpg', radius: 7, a: 130*scale, e: 0.017, period: 365.25, baseAngle: 1.75, omega: 0, realDist: "1.00 UA", info: { type: "Planète tellurique", diam: "12 742 km", mass: "1 x Terre", temp: "~15 °C" },
               moons: [{ name: "Lune", color: 0xaaaaaa, tex: 'moon_1024.jpg', radius: 1.5, dist: 14*scale, period: 27.3, baseAngle: 0, info: { type: "Satellite naturel", diam: "3 474 km", mass: "0,012 x Terre", temp: "-173 à 127 °C" } }] },
             { name: "Mars", color: 0xc1440e, tex: 'mars_1k_color.jpg', radius: 4, a: 180*scale, e: 0.094, period: 687, baseAngle: 6.20, omega: 5.0, realDist: "1.52 UA", info: { type: "Planète tellurique", diam: "6 779 km", mass: "0,107 x Terre", temp: "~ -63 °C" } },
-            { name: "Jupiter", color: 0xd39c7e, radius: 16, a: 320*scale, e: 0.049, period: 4332, baseAngle: 0.59, omega: 0.2, realDist: "5.20 UA", info: { type: "Géante gazeuse", diam: "139 820 km", mass: "318 x Terre", temp: "-110 °C" } },
+            { name: "Jupiter", color: 0xd39c7e, radius: 16, a: 320*scale, e: 0.049, period: 4332, baseAngle: 0.59, omega: 0.2, realDist: "5.20 UA", info: { type: "Géante gazeuse", diam: "139 820 km", mass: "318 x Terre", temp: "-110 °C" },
+              moons: [{ name: "Io", color: 0xffffaa, radius: 1.2, dist: 22*scale, period: 1.7, baseAngle: 1, info: { type: "Satellite volcanique", diam: "3 642 km", mass: "0,015 x Terre", temp: "-130 °C" } },
+                      { name: "Europe", color: 0xaaddff, radius: 1, dist: 28*scale, period: 3.5, baseAngle: 2, info: { type: "Satellite glacé", diam: "3 121 km", mass: "0,008 x Terre", temp: "-160 °C" } }] },
             { name: "Saturne", color: 0xe6d5a8, radius: 13, a: 460*scale, e: 0.057, period: 10759, baseAngle: 0.87, omega: 1.6, realDist: "9.58 UA", info: { type: "Géante gazeuse", diam: "116 460 km", mass: "95 x Terre", temp: "-140 °C" } },
             { name: "Uranus", color: 0x71c8d7, radius: 9, a: 620*scale, e: 0.046, period: 30688, baseAngle: 5.46, omega: 3.0, realDist: "19.2 UA", info: { type: "Géante de glaces", diam: "50 724 km", mass: "14,5 x Terre", temp: "-195 °C" } },
             { name: "Neptune", color: 0x4b70dd, radius: 9, a: 780*scale, e: 0.011, period: 60182, baseAngle: 5.31, omega: 0.8, realDist: "30.1 UA", info: { type: "Géante de glaces", diam: "49 244 km", mass: "17 x Terre", temp: "-200 °C" } },
-            { name: "Comète Halley", color: 0xcceeff, radius: 2.5, a: 450*scale, e: 0.967, period: 27562, baseAngle: 3.14, omega: -0.8, realDist: "0.59 - 35.1 UA", info: { type: "Comète périodique", diam: "~11 km", mass: "Négligeable", temp: "Variable" } }
+            { name: "Comète Halley", color: 0xcceeff, radius: 2.5, a: 450*scale, e: 0.967, period: 27562, baseAngle: 3.14, omega: -0.8, realDist: "0.59 - 35.1 UA", info: { type: "Comète périodique", diam: "~11 km", mass: "Négligeable", temp: "Variable" } },
+            { name: "Pluton", color: 0xddccbb, radius: 4, a: 1020*scale, e: 0.248, period: 90560, baseAngle: 3.5, omega: 1.96, realDist: "29.6 - 49.3 UA", info: { type: "Planète naine", diam: "2 376 km", mass: "0,002 x Terre", temp: "-229 °C" } }
         ];
 
         function getOrbitalPosition(a, e, period, baseAngle, omega, daysSinceJ2000) {
@@ -289,8 +303,10 @@
             }
         });
 
-        const beltGroup = new THREE.Group(); scene.add(beltGroup);
-        const createBelt = (count, aMin, aVar, colorStr) => {
+        const asteroidBelt = new THREE.Group(); scene.add(asteroidBelt);
+        const kuiperBelt = new THREE.Group(); scene.add(kuiperBelt);
+
+        const createBeltPoints = (count, aMin, aVar, colorStr) => {
             const geo = new THREE.BufferGeometry(); const pos = [];
             for (let i = 0; i < count; i++) {
                 const a = (aMin + Math.random() * aVar) * scale;
@@ -300,8 +316,8 @@
             geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
             return new THREE.Points(geo, new THREE.PointsMaterial({ color: colorStr, size: 3.0, sizeAttenuation: false, transparent: true, opacity: 0.8 }));
         };
-        const asteroids = createBelt(4000, 210, 80, 0xffddaa); beltGroup.add(asteroids);
-        const kuiper = createBelt(5000, 850, 400, 0xaaddff); beltGroup.add(kuiper);
+        asteroidBelt.add(createBeltPoints(4000, 210, 80, 0xffddaa));
+        kuiperBelt.add(createBeltPoints(5000, 850, 400, 0xaaddff));
 
         // --- GESTION DE LA TRANSITION GALACTIQUE ---
         let currentGalaxyOpacity = 0;
@@ -329,8 +345,10 @@
         let speed = 1, isPaused = false;
         document.getElementById('speed-slider').addEventListener('input', e => { speed = parseFloat(e.target.value); document.getElementById('speed-display').innerText = speed + " j/sec"; });
         document.getElementById('pause-btn').addEventListener('click', e => { isPaused = !isPaused; e.target.innerText = isPaused ? "Reprendre" : "Mettre en pause"; });
+        document.getElementById('toggle-ecliptic').addEventListener('change', e => eclipticGrid.visible = e.target.checked);
         document.getElementById('toggle-orbits').addEventListener('change', e => orbitesMeshes.forEach(o => o.visible = e.target.checked));
-        document.getElementById('toggle-asteroids').addEventListener('change', e => beltGroup.visible = e.target.checked);
+        document.getElementById('toggle-asteroids').addEventListener('change', e => asteroidBelt.visible = e.target.checked);
+        document.getElementById('toggle-kuiper').addEventListener('change', e => kuiperBelt.visible = e.target.checked);
         document.getElementById('night-mode-btn').addEventListener('click', e => { const over = document.getElementById('red-overlay'); over.style.display = over.style.display === 'block' ? 'none' : 'block'; });
 
         const targetSelect = document.getElementById('target-select');
@@ -412,7 +430,8 @@
                 }
             });
 
-            beltGroup.rotation.y += 0.0005; 
+            asteroidBelt.rotation.y += 0.0005; 
+            kuiperBelt.rotation.y += 0.0002; 
 
             // --- ANIMATION DE LA GALAXIE ---
             if (Math.abs(currentGalaxyOpacity - targetGalaxyOpacity) > 0.01) {
