@@ -9,6 +9,7 @@
         #ui-container{position:absolute;top:10px;left:10px;background:rgba(10,15,30,.85);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);z-index:10;backdrop-filter:blur(4px);max-width:220px;}
         h1{margin:0 0 10px;font-size:1rem;color:#4da8da;text-transform:uppercase}
         .control-group{margin-bottom:10px;display:flex;flex-direction:column;gap:5px}
+        .checkbox-group{flex-direction:row !important; align-items:center; cursor:pointer; font-size:0.8rem;}
         button{background:#4da8da;color:#050510;border:none;padding:8px;border-radius:5px;cursor:pointer;font-weight:bold;width:100%; transition: 0.3s;}
         button:hover{background:#79c2ea}
         .info-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; font-size: 0.85rem; line-height: 1.4; border: 1px solid rgba(77,168,218,0.2); }
@@ -32,6 +33,18 @@
             <label style="font-size: 0.8rem;">Éclairage Solaire (Phase) :</label>
             <input type="range" id="phase-slider" min="0" max="6.28" step="0.01" value="0">
             <button id="auto-align-btn" style="margin-top: 5px; background: #ffcc00; color: #050510;">✨ Auto-alignement</button>
+        </div>
+        <div class="control-group checkbox-group">
+            <input type="checkbox" id="auto-follow-cb">
+            <label for="auto-follow-cb">Suivi alignement temps réel</label>
+        </div>
+        <div class="control-group checkbox-group">
+            <input type="checkbox" id="force-line-cb">
+            <label for="force-line-cb">Afficher force gravitationnelle</label>
+        </div>
+        <div class="control-group checkbox-group">
+            <input type="checkbox" id="syzygy-line-cb" checked>
+            <label for="syzygy-line-cb">Afficher ligne de syzygie</label>
         </div>
         <a href="index.html" style="text-decoration:none;"><button>🏠 Retour Accueil</button></a>
     </div>
@@ -156,10 +169,60 @@
         starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
         scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 1})));
 
+        // --- LIGNE DE SYZYGIE (Alignement) ---
+        const syzygyLineCb = document.getElementById('syzygy-line-cb');
+        const syzygyLineGeo = new THREE.BufferGeometry();
+        const syzygyLineMat = new THREE.LineBasicMaterial({ 
+            color: 0xffcc00, 
+            transparent: true, 
+            opacity: 0.8,
+            linewidth: 2
+        });
+        const syzygyLine = new THREE.Line(syzygyLineGeo, syzygyLineMat);
+        syzygyLine.visible = false;
+        scene.add(syzygyLine);
+
+
+        // --- LIGNE DE FORCE GRAVITATIONNELLE ---
+        const forceLineCb = document.getElementById('force-line-cb');
+        const forceLineGeo = new THREE.BufferGeometry();
+        const forceLineMat = new THREE.LineDashedMaterial({ 
+            color: 0x4da8da, 
+            dashSize: 10, 
+            gapSize: 5,
+            transparent: true,
+            opacity: 0.6
+        });
+        const forceLine = new THREE.Line(forceLineGeo, forceLineMat);
+        forceLine.visible = false;
+        scene.add(forceLine);
+
+        forceLineCb.addEventListener('change', (e) => {
+            forceLine.visible = e.target.checked;
+        });
+
         // --- LOGIQUE DES PHASES ---
         const phaseSlider = document.getElementById('phase-slider');
         const phaseText = document.getElementById('moon-phase');
         const syzygyText = document.getElementById('syzygy-status');
+        const autoFollowCb = document.getElementById('auto-follow-cb');
+
+        let isAutoFollowing = false;
+        let followOffset = 0; // 0 pour Conjonction, PI pour Opposition
+
+        autoFollowCb.addEventListener('change', (e) => {
+            isAutoFollowing = e.target.checked;
+            phaseSlider.disabled = isAutoFollowing;
+            if (isAutoFollowing) {
+                // Au moment de l'activation, on détermine si on suit la Terre ou son opposé
+                const currentEarthAngle = (Date.now() * 0.0001) % (Math.PI * 2);
+                const currentSunAngle = parseFloat(phaseSlider.value);
+                const diff = Math.abs(currentSunAngle - currentEarthAngle) % (Math.PI * 2);
+                const normalizedDiff = diff > Math.PI ? 2 * Math.PI - diff : diff;
+                
+                followOffset = (normalizedDiff < Math.PI / 2) ? 0 : Math.PI;
+            }
+        });
 
         // --- AUTO-ALIGNEMENT ---
         document.getElementById('auto-align-btn').addEventListener('click', () => {
@@ -176,20 +239,40 @@
             phaseSlider.value = (d1 < d2 ? t1 : t2).toFixed(2);
         });
 
-        function checkSyzygy(sunAngle, earthAngle) {
+        function updateSyzygyAndEclipse(sunAngle, earthAngle) {
             // Calcul de la différence d'angle entre le Soleil et la Terre par rapport à la Lune
             const diff = Math.abs(sunAngle - earthAngle) % Math.PI;
             const threshold = 0.1; // Tolérance d'alignement (environ 5.7 degrés)
+            const isAligned = (diff < threshold || diff > Math.PI - threshold);
 
-            if (diff < threshold) {
+            // 1. Mise à jour du texte et de la ligne
+            if (diff < threshold) { // Conjonction (Terre entre Soleil et Lune -> Éclipse Lunaire)
                 syzygyText.innerText = "Oui (Conjonction)";
                 syzygyText.style.color = "#ffcc00";
+                
+                // Simulation de l'éclipse (assombrissement et teinte rouge)
+                const eclipseFactor = Math.max(0, diff / threshold); // 0 au centre, 1 au bord
+                sunLight.intensity = 0.2 + 1.8 * eclipseFactor;
+                sunLight.color.setRGB(1, 0.4 + 0.6 * eclipseFactor, 0.4 + 0.6 * eclipseFactor);
             } else if (diff > Math.PI - threshold) {
                 syzygyText.innerText = "Oui (Opposition)";
                 syzygyText.style.color = "#ffcc00";
+                sunLight.intensity = 2;
+                sunLight.color.setHex(0xffffff);
             } else {
                 syzygyText.innerText = "Non";
                 syzygyText.style.color = "#fff";
+                sunLight.intensity = 2;
+                sunLight.color.setHex(0xffffff);
+            }
+
+            // 2. Gestion visuelle de la ligne de syzygie
+            if (isAligned && syzygyLineCb.checked) {
+                const sunPosVirtual = sunLight.position.clone().normalize().multiplyScalar(500);
+                syzygyLineGeo.setFromPoints([sunPosVirtual, new THREE.Vector3(0,0,0), earth.position]);
+                syzygyLine.visible = true;
+            } else {
+                syzygyLine.visible = false;
             }
         }
 
@@ -208,6 +291,12 @@
         function animate() {
             requestAnimationFrame(animate);
             
+            const earthAngle = Date.now() * 0.0001;
+
+            if (isAutoFollowing) {
+                phaseSlider.value = ((earthAngle + followOffset) % (Math.PI * 2)).toFixed(2);
+            }
+
             // Position du soleil basée sur le slider
             const angle = parseFloat(phaseSlider.value);
             sunLight.position.set(Math.cos(angle) * 100, 0, Math.sin(angle) * 100);
@@ -215,13 +304,18 @@
 
             // Rotation synchrone (la Lune présente toujours la même face à la Terre)
             // Ici, on fait tourner la Terre autour de la Lune pour le visuel
-            const earthAngle = Date.now() * 0.0001;
             earth.position.x = Math.cos(earthAngle) * 300;
             earth.position.z = Math.sin(earthAngle) * 300;
             earth.rotation.y += 0.002;
 
             // Vérification de l'alignement Terre-Lune-Soleil
-            checkSyzygy(angle, earthAngle);
+            updateSyzygyAndEclipse(angle, earthAngle);
+
+            // Mise à jour de la ligne de force
+            if (forceLine.visible) {
+                forceLineGeo.setFromPoints([new THREE.Vector3(0,0,0), earth.position]);
+                forceLine.computeLineDistances();
+            }
 
             controls.update();
             renderer.render(scene, camera);
