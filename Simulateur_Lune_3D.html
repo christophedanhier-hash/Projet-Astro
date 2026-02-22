@@ -43,6 +43,10 @@
                 <input type="range" id="phase-slider" min="0" max="6.28" step="0.01" value="0">
                 <button id="auto-align-btn" style="margin-top: 5px; background: #ffcc00; color: #050510;">✨ Auto-alignement</button>
             </div>
+            <div class="control-group">
+                <label style="font-size: 0.8rem;">Vitesse rotation Terre : <span id="earth-speed-display">1x</span></label>
+                <input type="range" id="earth-speed-slider" min="0" max="10" step="0.1" value="1">
+            </div>
             <div class="control-group checkbox-group">
                 <input type="checkbox" id="auto-follow-cb">
                 <label for="auto-follow-cb">Suivi alignement temps réel</label>
@@ -188,6 +192,21 @@
         starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
         scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 1})));
 
+        // --- LIBELLÉ SYZYGIE ---
+        function createLabel(text, color) {
+            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
+            const ctx = canvas.getContext('2d'); ctx.font = 'bold 28px Arial'; ctx.fillStyle = color; ctx.textAlign = 'center';
+            ctx.fillText(text, 256, 64);
+            const texture = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0 });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(35, 8.75, 1);
+            return sprite;
+        }
+        const syzygyLabel = createLabel("Axe de Syzygie (Alignement)", "#ffcc00");
+        syzygyLabel.position.set(0, 25, 0); // Positionné au-dessus de la Lune
+        scene.add(syzygyLabel);
+
         // --- LIGNE DE SYZYGIE (Alignement) ---
         const syzygyLineCb = document.getElementById('syzygy-line-cb');
         const syzygyLineGeo = new THREE.BufferGeometry();
@@ -225,6 +244,15 @@
         const phaseText = document.getElementById('moon-phase');
         const syzygyText = document.getElementById('syzygy-status');
         const autoFollowCb = document.getElementById('auto-follow-cb');
+
+        // --- GESTION VITESSE ROTATION TERRE ---
+        let earthRotationMultiplier = 1;
+        const earthSpeedSlider = document.getElementById('earth-speed-slider');
+        const earthSpeedDisplay = document.getElementById('earth-speed-display');
+        earthSpeedSlider.addEventListener('input', (e) => {
+            earthRotationMultiplier = parseFloat(e.target.value);
+            earthSpeedDisplay.innerText = earthRotationMultiplier.toFixed(1) + 'x';
+        });
 
         // --- GESTION DE L'INTERFACE ---
         const toggleUiBtn = document.getElementById('toggle-ui-btn');
@@ -322,8 +350,11 @@
                 syzygyLineMat.opacity = 0.1 + 0.7 * alignmentFactor;
                 const sunPosVirtual = sunLight.position.clone().normalize().multiplyScalar(500);
                 syzygyLineGeo.setFromPoints([sunPosVirtual, new THREE.Vector3(0,0,0), earth.position]);
+                syzygyLabel.visible = true;
+                syzygyLabel.material.opacity = syzygyLineMat.opacity;
             } else {
                 syzygyLine.visible = false;
+                syzygyLabel.visible = false;
             }
         }
 
@@ -374,7 +405,7 @@
             // Ici, on fait tourner la Terre autour de la Lune pour le visuel
             earth.position.x = Math.cos(earthAngle) * 300;
             earth.position.z = Math.sin(earthAngle) * 300;
-            earth.rotation.y += 0.002;
+            earth.rotation.y += 0.002 * earthRotationMultiplier;
 
             // Vérification de l'alignement Terre-Lune-Soleil
             updateSyzygyAndEclipse(sunAngle, earthAngle);
