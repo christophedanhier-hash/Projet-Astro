@@ -388,7 +388,18 @@
         document.getElementById('night-mode-btn').addEventListener('click', e => { const over = document.getElementById('red-overlay'); over.style.display = over.style.display === 'block' ? 'none' : 'block'; });
 
         const targetSelect = document.getElementById('target-select');
-        planets.forEach((p, i) => { targetSelect.innerHTML += `<option value="${i}">${p.name}</option>`; if (p.moons) p.moons.forEach((m, j) => targetSelect.innerHTML += `<option value="${i}-${j}"> ↳ ${m.name}</option>`); });
+        planets.forEach((p, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.innerText = p.name;
+            targetSelect.appendChild(opt);
+            if (p.moons) p.moons.forEach((m, j) => {
+                const optM = document.createElement('option');
+                optM.value = `${i}-${j}`;
+                optM.innerText = ` ↳ ${m.name}`;
+                targetSelect.appendChild(optM);
+            });
+        });
 
         let trackedBody = null;
         targetSelect.addEventListener('change', e => {
