@@ -1,68 +1,64 @@
 # 🌌 Guide de l'Utilisateur - Projet Astro
 
-Bienvenue dans votre suite d'outils d'exploration astronomique. Ce guide vous aidera à tirer le meilleur parti des différents simulateurs.
+Bienvenue sur ce planétarium interactif ! Cet outil a été conçu pour explorer notre système planétaire en temps réel, comprendre la mécanique céleste et préparer efficacement vos soirées d'observation. Voici comment exploiter au mieux toutes ses fonctionnalités.
 
 ---
 
-## 🏠 1. Page d'Accueil
-La page principale (`index.html`) est votre centre de commande. Elle vous permet d'accéder rapidement aux trois simulateurs et à votre journal d'observation.
+## 🧭 Navigation et Contrôle de la Caméra
+
+- **Zoom manuel (🔍 + / 🔍 -)** : Utilisez ces boutons ou la molette de votre souris pour vous rapprocher des planètes ou avoir une vue d'ensemble du Système solaire. Sur mobile, le pincement à deux doigts permet également de zoomer.
+
+- **Recherche rapide (🎯 Chercher un astre)** : Utilisez ce menu déroulant pour sélectionner instantanément une planète, une lune ou une comète. La caméra se verrouillera automatiquement sur votre cible et la suivra dans sa course.
+
+- **Suivi manuel** : Cliquez (ou touchez) directement un astre sur la carte pour centrer la vue sur lui. Cliquez n'importe où dans le vide spatial pour détacher la caméra et revenir à la vue globale du Soleil.
+
+- **Vue Galactique (🌌 / 🪐)** : Ce bouton vous permet de dézoomer de manière vertigineuse pour visualiser la position (approximative) de notre Système solaire au sein de notre galaxie, la Voie Lactée.
 
 ---
 
-## 🔭 2. Simulateur 2D (Système Solaire)
-Idéal pour une vue d'ensemble précise et l'étude des configurations planétaires.
+## ⏱️ Voyage dans le Temps
+L'outil embarque un véritable moteur de calcul astronomique (basé sur l'Époque J2000).
 
-### Navigation
-- **Zoom** : Utilisez la molette de la souris, les boutons **🔍+ / 🔍-** ou pincez l'écran sur tablette/smartphone.
-- **Sélection** : Cliquez sur un astre pour afficher sa fiche technique.
-- **Suivi** : Utilisez le menu "Chercher un astre" pour verrouiller la vue sur une planète ou une lune.
+- **Calendrier (🗓️ Date)** : Sélectionnez n'importe quelle date passée ou future pour visualiser la position exacte des astres à ce moment précis.
 
-### Fonctions Spéciales
-- **Mode Nuit** : Active un filtre rouge pour préserver votre vision nocturne lors de vos observations réelles.
-- **Indicateurs Astronomiques** : 
-    - **Opposition** : Une ligne pointillée blanche apparaît quand une planète est alignée avec la Terre et le Soleil (moment idéal pour l'observation).
-    - **Élongation** : Indique le meilleur moment pour observer Mercure et Vénus.
-    - **Visibilité** : Le menu contextuel (tooltip) indique si l'astre est actuellement au-dessus de l'horizon à Sombreffe (Belgique).
+- **Curseur de vitesse** : Accélérez le temps (jusqu'à plusieurs dizaines de jours par seconde) pour observer la fameuse "danse des planètes", ou mettez la simulation en pause pour figer un instant précis. Observez bien : selon les lois de Kepler, les planètes accélèrent légèrement lorsqu'elles se rapprochent du Soleil !
 
 ---
 
-## 🌌 3. Simulateur 3D (Immersion & Galaxie)
-Une expérience immersive pour visualiser les orbites dans l'espace et notre position dans la Voie Lactée.
+## 🔭 Outils de Terrain et d'Observation
+Ce simulateur est pensé pour vous accompagner sous le ciel étoilé.
 
-### Navigation
-- **Rotation** : Clic gauche (ou un doigt) et glisser.
-- **Panoramique** : Clic droit (ou deux doigts) et glisser.
-- **Traînées (Trails)** : Les planètes laissent une trace de leur passage pour visualiser la forme réelle de leurs orbites elliptiques.
+- **Mode Nuit (🔴)** : Applique un filtre rouge sur l'ensemble de l'écran. Cette fonction est cruciale pour consulter la carte sur votre téléphone ou tablette sans perdre votre acclimatation visuelle à l'obscurité.
 
-### Vue Galactique
-- Cliquez sur **"Révéler la Galaxie"** pour dézoomer massivement et voir le Système Solaire au sein du Bras d'Orion dans la Voie Lactée.
-- La transition est fluide et permet de comprendre l'échelle immense de notre galaxie.
+- **Visibilité Locale** : L'outil calcule la position des astres par rapport à l'horizon local (paramétré pour les coordonnées de Sombreffe). En survolant une planète, l'infobulle vous indique en temps réel si elle est Visible dans le ciel (🔭) ou si elle est actuellement cachée Sous l'horizon (⛰️).
+
+- **Fiches Encyclopédiques** : Lorsque vous cliquez sur un astre (ou le choisissez dans le menu), un panneau en verre dépoli glisse depuis le bas de l'écran. Il vous dévoile ses caractéristiques physiques : catégorie, diamètre, masse (par rapport à la Terre) et température moyenne.
 
 ---
 
-## 🌑 4. Exploration Lunaire 3D
-Outil dédié à l'étude du système Terre-Lune et des phénomènes d'alignement.
+## ✨ Phénomènes Astronomiques Détectés
+Le simulateur analyse en permanence l'alignement de la Terre avec les autres astres pour vous signaler les meilleurs moments d'observation :
 
-### Étude des Phases
-- **Slider de Phase** : Déplacez manuellement le Soleil pour observer le cycle lunaire (Nouvelle Lune, Quartiers, Pleine Lune).
-- **Auto-alignement** : Aligne instantanément le Soleil pour créer une Pleine Lune ou une Nouvelle Lune parfaite.
-- **Suivi Temps Réel** : Le Soleil se synchronise sur la position de la Terre pour simuler l'évolution naturelle des phases.
+- **En Opposition (✨)** : Lorsqu'une planète externe (Mars, Jupiter, Saturne...) s'aligne parfaitement avec la Terre et le Soleil, une ligne pointillée brillante apparaît. C'est le moment de l'année où la planète est la plus proche, la plus grosse et la plus lumineuse dans l'oculaire !
 
-### Phénomènes Physiques
-- **Syzygie** : L'outil détecte l'alignement Terre-Lune-Soleil. En cas de conjonction parfaite, une **éclipse lunaire** est simulée (la Lune s'assombrit et devient rouge).
-- **Force Gravitationnelle** : Activez la ligne bleue pour visualiser le lien invisible qui maintient la Lune en orbite.
-- **Sites Lunaires** : Cliquez sur les marqueurs jaunes pour identifier les mers lunaires (ex: Mer de la Tranquillité).
+- **Élongation maximale (🌅)** : Pour les planètes internes (Mercure et Vénus), une ligne pointillée orange signale le moment où elles s'écartent visuellement le plus du Soleil. C'est la fenêtre d'observation parfaite, juste après le coucher ou avant le lever du Soleil.
 
 ---
 
-## 📓 5. Carnet d'Observation
-Un espace personnel pour consigner vos découvertes.
-- Notez la date, la cible et les conditions météo.
-- Prévu pour intégrer vos futures astrophotographies ou croquis réalisés à l'oculaire.
+## ⚙️ Options d'Affichage Céleste
+Personnalisez votre vue spatiale en activant ou désactivant différents calques :
 
 ---
 
-## ✨ 6. Astuces pour préparer une soirée réelle
+- **Grille Écliptique** : Affiche le plan géométrique de référence du Système solaire (le plan dans lequel orbite la Terre) et indique la direction du Point Vernal (♈), le point zéro des coordonnées célestes.
+
+- **Les "Rebelles" du Système** : Grâce à la grille écliptique, observez l'orbite très inclinée de Pluton, qui "plonge" littéralement à travers le plan des autres planètes pour croiser l'orbite de Neptune. Ne manquez pas non plus la Comète de Halley, dont l'orbite est rétrograde : elle tourne dans le sens inverse de toutes les autres planètes !
+
+- **Ceintures d'Astéroïdes** : Visualisez la dynamique de la Ceinture Principale (entre Mars et Jupiter) et de la lointaine et glacée Ceinture de Kuiper (au-delà de Neptune).
+
+---
+
+## ✨ Astuces pour préparer une soirée réelle
 Utilisez ces outils comme un véritable assistant de préparation :
 
 - **Anticiper les cibles** : Utilisez le simulateur 2D pour repérer les planètes en **Opposition** (marquées par une ligne blanche). C'est le moment où elles sont au plus près de la Terre et visibles toute la nuit.
@@ -75,7 +71,7 @@ Utilisez ces outils comme un véritable assistant de préparation :
 
 ---
 
-## 🛠️ 7. Conseils Techniques
+## 🛠️ Conseils Techniques
 - **Performance** : Les simulateurs utilisent WebGL (3D) et Canvas (2D). Pour une fluidité maximale, fermez les onglets inutiles de votre navigateur.
 - **Mises à jour** : Le projet évolue régulièrement. N'hésitez pas à vider le cache de votre navigateur si une nouvelle fonctionnalité ne semble pas apparaître.
 
