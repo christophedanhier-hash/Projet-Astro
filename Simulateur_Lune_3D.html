@@ -289,10 +289,16 @@
 
         // --- GESTION DU ZOOM ---
         document.getElementById('zoom-in-btn').addEventListener('click', () => {
-            controls.dollyIn(0.769); // Équivalent à diviser la distance par 1.3 (1 / 1.3)
+            const dist = camera.position.distanceTo(controls.target);
+            const newDist = dist / 1.3;
+            const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+            camera.position.copy(controls.target).addScaledVector(direction, Math.max(newDist, controls.minDistance));
         });
         document.getElementById('zoom-out-btn').addEventListener('click', () => {
-            controls.dollyOut(1.3); // Équivalent à multiplier la distance par 1.3
+            const dist = camera.position.distanceTo(controls.target);
+            const newDist = dist * 1.3;
+            const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+            camera.position.copy(controls.target).addScaledVector(direction, Math.min(newDist, controls.maxDistance));
         });
 
         let isAutoFollowing = false;
@@ -362,12 +368,12 @@
                 sunLight.intensity = 2; sunLight.color.setHex(0xffffff);
             }
 
-            if (isAligned && syzygyLineCb.checked) {
+            if (syzygyLineCb.checked) {
                 syzygyLine.visible = true;
                 syzygyLineMat.opacity = 0.1 + 0.7 * alignmentFactor;
                 const sunPosVirtual = sunLight.position.clone().normalize().multiplyScalar(500);
                 syzygyLineGeo.setFromPoints([sunPosVirtual, new THREE.Vector3(0,0,0), earth.position]);
-                syzygyLabel.visible = true;
+                syzygyLabel.visible = isAligned;
                 syzygyLabel.material.opacity = syzygyLineMat.opacity;
             } else {
                 syzygyLine.visible = false;
