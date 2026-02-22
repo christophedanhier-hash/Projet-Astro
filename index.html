@@ -91,6 +91,30 @@
             transition: color 0.2s;
         }
         #clear-search:hover { color: #4da8da; }
+
+        /* Styles pour la prévisualisation Galaxie */
+        #galaxy-preview-container {
+            margin-top: 40px; 
+            position: relative; 
+            display: inline-block; 
+            padding: 25px; 
+            background: rgba(10,15,30,0.4); 
+            border-radius: 20px; 
+            border: 1px solid rgba(77,168,218,0.2); 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        #galaxy-preview-canvas {
+            border-radius: 50%; 
+            background: radial-gradient(circle, #0a0f1e 0%, #020205 100%);
+        }
+        #solar-system-marker {
+            position: absolute; 
+            pointer-events: none; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            transform: translate(-50%, -100%);
+        }
     </style>
 </head>
 <body>
@@ -111,11 +135,11 @@
         <p>Bienvenue sur mon espace dédié à l'astronomie. Choisissez un simulateur ci-dessus pour explorer le système solaire !</p>
 
         <!-- Représentation de la Galaxie et position du Système Solaire -->
-        <div id="galaxy-preview-container" style="margin-top: 40px; position: relative; display: inline-block; padding: 25px; background: rgba(10,15,30,0.4); border-radius: 20px; border: 1px solid rgba(77,168,218,0.2); box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+        <div id="galaxy-preview-container">
             <h3 style="color: #79c2ea; margin-bottom: 20px; font-size: 1.2rem;">Notre situation dans la Voie Lactée</h3>
             <div style="position: relative; width: 400px; height: 400px; margin: 0 auto;">
-                <canvas id="galaxy-preview-canvas" width="400" height="400" style="border-radius: 50%; background: radial-gradient(circle, #0a0f1e 0%, #020205 100%);"></canvas>
-                <div id="solar-system-marker" style="position: absolute; pointer-events: none; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%);">
+                <canvas id="galaxy-preview-canvas" width="400" height="400"></canvas>
+                <div id="solar-system-marker">
                     <span style="font-size: 0.75rem; white-space: nowrap; background: #ffcc00; color: #050510; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-bottom: 4px; box-shadow: 0 0 10px #ffcc00;">📍 Système Solaire (Bras d'Orion)</span>
                     <span style="font-size: 1.5rem; filter: drop-shadow(0 0 5px black);">🚩</span>
                 </div>
