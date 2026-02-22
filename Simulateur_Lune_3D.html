@@ -289,12 +289,10 @@
 
         // --- GESTION DU ZOOM ---
         document.getElementById('zoom-in-btn').addEventListener('click', () => {
-            const dist = camera.position.distanceTo(controls.target);
-            camera.position.copy(controls.target).addScaledVector(new THREE.Vector3().subVectors(camera.position, controls.target).normalize(), Math.max(dist / 1.3, controls.minDistance));
+            controls.dollyIn(0.769); // Équivalent à diviser la distance par 1.3 (1 / 1.3)
         });
         document.getElementById('zoom-out-btn').addEventListener('click', () => {
-            const dist = camera.position.distanceTo(controls.target);
-            camera.position.copy(controls.target).addScaledVector(new THREE.Vector3().subVectors(camera.position, controls.target).normalize(), Math.min(dist * 1.3, controls.maxDistance));
+            controls.dollyOut(1.3); // Équivalent à multiplier la distance par 1.3
         });
 
         let isAutoFollowing = false;
