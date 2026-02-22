@@ -6,12 +6,14 @@
     <title>Exploration Lunaire 3D</title>
     <style>
         html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#020205;font-family:sans-serif;color:#fff;touch-action:none}
-        #ui-container{position:absolute;top:10px;left:10px;background:rgba(10,15,30,.85);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);z-index:10;backdrop-filter:blur(4px);max-width:220px;}
+        #ui-container{position:absolute;top:10px;left:10px;background:rgba(10,15,30,.85);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);z-index:10;backdrop-filter:blur(4px);max-width:240px;max-height:85vh;overflow-y:auto}
         h1{margin:0 0 10px;font-size:1rem;color:#4da8da;text-transform:uppercase}
         .control-group{margin-bottom:10px;display:flex;flex-direction:column;gap:5px}
         .checkbox-group{flex-direction:row !important; align-items:center; cursor:pointer; font-size:0.8rem;}
+        .btn-group{display:flex;gap:5px}
         button{background:#4da8da;color:#050510;border:none;padding:8px;border-radius:5px;cursor:pointer;font-weight:bold;width:100%; transition: 0.3s;}
         button:hover{background:#79c2ea}
+        #toggle-ui-btn{background:#3a4a5a;color:#fff;margin-top:5px;width:100%}
         .info-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; font-size: 0.85rem; line-height: 1.4; border: 1px solid rgba(77,168,218,0.2); }
         .highlight { color: #4da8da; font-weight: bold; }
         canvas{display:block;width:100%;height:100%}
@@ -19,34 +21,51 @@
 </head>
 <body>
     <div id="ui-container">
-        <h1>Exploration Lunaire</h1>
-        <div class="control-group">
-            <div class="info-box">
-                <span class="highlight">Phase :</span> <span id="moon-phase">-</span><br>
-                <span class="highlight">Distance :</span> 384 400 km<br>
-                <span class="highlight">Rotation :</span> Synchrone<br>
-                <span class="highlight">Lieu :</span> <span id="selected-sea">Aucun</span><br>
-                <span class="highlight">Syzygie :</span> <span id="syzygy-status">Non</span>
+        <div id="ui-content">
+            <h1>Exploration Lunaire</h1>
+            <div class="control-group">
+                <div class="info-box">
+                    <span class="highlight">Phase :</span> <span id="moon-phase">-</span><br>
+                    <span class="highlight">Distance :</span> 384 400 km<br>
+                    <span class="highlight">Rotation :</span> Synchrone<br>
+                    <span class="highlight">Lieu :</span> <span id="selected-sea">Aucun</span><br>
+                    <span class="highlight">Syzygie :</span> <span id="syzygy-status">Non</span>
+                </div>
             </div>
+            <div class="control-group">
+                <div class="btn-group">
+                    <button id="zoom-in-btn">🔍 +</button>
+                    <button id="zoom-out-btn">🔍 -</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <label style="font-size: 0.8rem;">Éclairage Solaire (Phase) :</label>
+                <input type="range" id="phase-slider" min="0" max="6.28" step="0.01" value="0">
+                <button id="auto-align-btn" style="margin-top: 5px; background: #ffcc00; color: #050510;">✨ Auto-alignement</button>
+            </div>
+            <div class="control-group">
+                <label style="font-size: 0.8rem;">Vitesse rotation Terre : <span id="earth-speed-display">1x</span></label>
+                <input type="range" id="earth-speed-slider" min="0" max="10" step="0.1" value="1">
+            </div>
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="auto-follow-cb">
+                <label for="auto-follow-cb">Suivi alignement temps réel</label>
+            </div>
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="force-line-cb">
+                <label for="force-line-cb">Afficher force gravitationnelle</label>
+            </div>
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="syzygy-line-cb" checked>
+                <label for="syzygy-line-cb">Afficher ligne de syzygie</label>
+            </div>
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="toggle-markers-cb" checked>
+                <label for="toggle-markers-cb">Afficher les sites lunaires</label>
+            </div>
+            <a href="index.html" style="text-decoration:none;"><button id="home-btn" style="background:#3a4a5a; color:#fff; margin-top:10px; width:100%">🏠 Accueil</button></a>
         </div>
-        <div class="control-group">
-            <label style="font-size: 0.8rem;">Éclairage Solaire (Phase) :</label>
-            <input type="range" id="phase-slider" min="0" max="6.28" step="0.01" value="0">
-            <button id="auto-align-btn" style="margin-top: 5px; background: #ffcc00; color: #050510;">✨ Auto-alignement</button>
-        </div>
-        <div class="control-group checkbox-group">
-            <input type="checkbox" id="auto-follow-cb">
-            <label for="auto-follow-cb">Suivi alignement temps réel</label>
-        </div>
-        <div class="control-group checkbox-group">
-            <input type="checkbox" id="force-line-cb">
-            <label for="force-line-cb">Afficher force gravitationnelle</label>
-        </div>
-        <div class="control-group checkbox-group">
-            <input type="checkbox" id="syzygy-line-cb" checked>
-            <label for="syzygy-line-cb">Afficher ligne de syzygie</label>
-        </div>
-        <a href="index.html" style="text-decoration:none;"><button>🏠 Retour Accueil</button></a>
+        <button id="toggle-ui-btn">👁️ Masquer l'interface</button>
     </div>
 
     <script type="module">
@@ -67,9 +86,38 @@
 
         // Lumière du Soleil (Directionnelle pour créer des phases nettes)
         const sunLight = new THREE.DirectionalLight(0xffffff, 2);
-        sunLight.position.set(100, 0, 0);
+        sunLight.position.set(800, 0, 0);
         sunLight.castShadow = true;
         scene.add(sunLight);
+
+        // --- LE SOLEIL (Représentation visuelle) ---
+        const sunGroup = new THREE.Group();
+        scene.add(sunGroup);
+
+        const sunCore = new THREE.Mesh(
+            new THREE.SphereGeometry(15, 32, 32),
+            new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        sunGroup.add(sunCore);
+
+        const sunHaloCanv = document.createElement('canvas');
+        sunHaloCanv.width = 256; sunHaloCanv.height = 256;
+        const hCtx = sunHaloCanv.getContext('2d');
+        const hGrd = hCtx.createRadialGradient(128, 128, 0, 128, 128, 128);
+        hGrd.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        hGrd.addColorStop(0.2, 'rgba(255, 240, 150, 0.5)');
+        hGrd.addColorStop(0.5, 'rgba(255, 200, 50, 0.1)');
+        hGrd.addColorStop(1, 'rgba(255, 150, 0, 0)');
+        hCtx.fillStyle = hGrd; hCtx.fillRect(0, 0, 256, 256);
+
+        const sunHaloMat = new THREE.SpriteMaterial({
+            map: new THREE.CanvasTexture(sunHaloCanv),
+            transparent: true,
+            blending: THREE.AdditiveBlending
+        });
+        const sunHalo = new THREE.Sprite(sunHaloMat);
+        sunHalo.scale.set(180, 180, 1);
+        sunGroup.add(sunHalo);
 
         // Lumière cendrée (faible lumière reflétée par la Terre)
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.05);
@@ -129,6 +177,25 @@
             marker.userData = sea;
             markerGroup.add(marker);
         });
+
+        document.getElementById('toggle-markers-cb').addEventListener('change', (e) => {
+            markerGroup.visible = e.target.checked;
+        });
+
+        // --- LIBELLÉ SYZYGIE ---
+        function createLabel(text, color) {
+            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
+            const ctx = canvas.getContext('2d'); ctx.font = 'bold 28px Arial'; ctx.fillStyle = color; ctx.textAlign = 'center';
+            ctx.fillText(text, 256, 64);
+            const texture = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0 });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(35, 8.75, 1);
+            return sprite;
+        }
+        const syzygyLabel = createLabel("Axe de Syzygie (Alignement)", "#ffcc00");
+        syzygyLabel.position.set(0, 25, 0);
+        scene.add(syzygyLabel);
 
         // --- INTERACTION (CLIC) ---
         const raycaster = new THREE.Raycaster();
@@ -206,14 +273,44 @@
         const phaseText = document.getElementById('moon-phase');
         const syzygyText = document.getElementById('syzygy-status');
         const autoFollowCb = document.getElementById('auto-follow-cb');
+        const earthSpeedSlider = document.getElementById('earth-speed-slider');
+        const earthSpeedDisplay = document.getElementById('earth-speed-display');
+
+        // --- GESTION DE L'INTERFACE ---
+        const toggleUiBtn = document.getElementById('toggle-ui-btn');
+        const uiContent = document.getElementById('ui-content');
+        toggleUiBtn.addEventListener('click', () => {
+            const isHidden = uiContent.style.display === 'none';
+            uiContent.style.display = isHidden ? 'block' : 'none';
+            toggleUiBtn.innerText = isHidden ? "👁️ Masquer l'interface" : "👁️ Afficher les contrôles";
+        });
+
+        // --- GESTION DU ZOOM ---
+        document.getElementById('zoom-in-btn').addEventListener('click', () => {
+            const dist = camera.position.distanceTo(controls.target);
+            camera.position.copy(controls.target).addScaledVector(new THREE.Vector3().subVectors(camera.position, controls.target).normalize(), dist / 1.3);
+        });
+        document.getElementById('zoom-out-btn').addEventListener('click', () => {
+            const dist = camera.position.distanceTo(controls.target);
+            camera.position.copy(controls.target).addScaledVector(new THREE.Vector3().subVectors(camera.position, controls.target).normalize(), Math.min(dist * 1.3, 1000));
+        });
 
         let isAutoFollowing = false;
         let followOffset = 0; // 0 pour Conjonction, PI pour Opposition
+        let earthRotationMultiplier = 1;
+        let isTransitioning = false;
+        let targetSunAngle = 0;
+
+        earthSpeedSlider.addEventListener('input', (e) => {
+            earthRotationMultiplier = parseFloat(e.target.value);
+            earthSpeedDisplay.innerText = earthRotationMultiplier.toFixed(1) + 'x';
+        });
 
         autoFollowCb.addEventListener('change', (e) => {
             isAutoFollowing = e.target.checked;
             phaseSlider.disabled = isAutoFollowing;
             if (isAutoFollowing) {
+                isTransitioning = false;
                 // Au moment de l'activation, on détermine si on suit la Terre ou son opposé
                 const currentEarthAngle = (Date.now() * 0.0001) % (Math.PI * 2);
                 const currentSunAngle = parseFloat(phaseSlider.value);
@@ -224,8 +321,11 @@
             }
         });
 
+        phaseSlider.addEventListener('input', () => isTransitioning = false);
+
         // --- AUTO-ALIGNEMENT ---
         document.getElementById('auto-align-btn').addEventListener('click', () => {
+            if (isAutoFollowing) return;
             const currentEarthAngle = (Date.now() * 0.0001) % (Math.PI * 2);
             const currentSunAngle = parseFloat(phaseSlider.value);
             
@@ -236,43 +336,42 @@
             const d1 = Math.min(Math.abs(currentSunAngle - t1), 2 * Math.PI - Math.abs(currentSunAngle - t1));
             const d2 = Math.min(Math.abs(currentSunAngle - t2), 2 * Math.PI - Math.abs(currentSunAngle - t2));
             
-            phaseSlider.value = (d1 < d2 ? t1 : t2).toFixed(2);
+            targetSunAngle = (d1 < d2 ? t1 : t2);
+            isTransitioning = true;
         });
 
         function updateSyzygyAndEclipse(sunAngle, earthAngle) {
-            // Calcul de la différence d'angle entre le Soleil et la Terre par rapport à la Lune
-            const diff = Math.abs(sunAngle - earthAngle) % Math.PI;
-            const threshold = 0.1; // Tolérance d'alignement (environ 5.7 degrés)
-            const isAligned = (diff < threshold || diff > Math.PI - threshold);
+            const rawDiff = Math.abs(sunAngle - earthAngle) % (Math.PI * 2);
+            const diff = Math.min(rawDiff, Math.abs(rawDiff - Math.PI), Math.abs(rawDiff - 2 * Math.PI));
+            const threshold = 0.15;
+            const alignmentFactor = Math.max(0, 1 - (diff / threshold));
+            const isAligned = diff < threshold;
 
-            // 1. Mise à jour du texte et de la ligne
-            if (diff < threshold) { // Conjonction (Terre entre Soleil et Lune -> Éclipse Lunaire)
-                syzygyText.innerText = "Oui (Conjonction)";
+            if (isAligned) {
                 syzygyText.style.color = "#ffcc00";
-                
-                // Simulation de l'éclipse (assombrissement et teinte rouge)
-                const eclipseFactor = Math.max(0, diff / threshold); // 0 au centre, 1 au bord
-                sunLight.intensity = 0.2 + 1.8 * eclipseFactor;
-                sunLight.color.setRGB(1, 0.4 + 0.6 * eclipseFactor, 0.4 + 0.6 * eclipseFactor);
-            } else if (diff > Math.PI - threshold) {
-                syzygyText.innerText = "Oui (Opposition)";
-                syzygyText.style.color = "#ffcc00";
-                sunLight.intensity = 2;
-                sunLight.color.setHex(0xffffff);
+                if (rawDiff < Math.PI/2 || rawDiff > 1.5*Math.PI) {
+                    syzygyText.innerText = "Oui (Conjonction)";
+                    sunLight.intensity = 2.0 - (1.8 * alignmentFactor);
+                    sunLight.color.setRGB(1, 1 - 0.6 * alignmentFactor, 1 - 0.6 * alignmentFactor);
+                } else {
+                    syzygyText.innerText = "Oui (Opposition)";
+                    sunLight.intensity = 2; sunLight.color.setHex(0xffffff);
+                }
             } else {
-                syzygyText.innerText = "Non";
-                syzygyText.style.color = "#fff";
-                sunLight.intensity = 2;
-                sunLight.color.setHex(0xffffff);
+                syzygyText.innerText = "Non"; syzygyText.style.color = "#fff";
+                sunLight.intensity = 2; sunLight.color.setHex(0xffffff);
             }
 
-            // 2. Gestion visuelle de la ligne de syzygie
             if (isAligned && syzygyLineCb.checked) {
+                syzygyLine.visible = true;
+                syzygyLineMat.opacity = 0.1 + 0.7 * alignmentFactor;
                 const sunPosVirtual = sunLight.position.clone().normalize().multiplyScalar(500);
                 syzygyLineGeo.setFromPoints([sunPosVirtual, new THREE.Vector3(0,0,0), earth.position]);
-                syzygyLine.visible = true;
+                syzygyLabel.visible = true;
+                syzygyLabel.material.opacity = syzygyLineMat.opacity;
             } else {
                 syzygyLine.visible = false;
+                syzygyLabel.visible = false;
             }
         }
 
@@ -292,25 +391,41 @@
             requestAnimationFrame(animate);
             
             const earthAngle = Date.now() * 0.0001;
+            let sunAngle;
 
             if (isAutoFollowing) {
-                phaseSlider.value = ((earthAngle + followOffset) % (Math.PI * 2)).toFixed(2);
+                sunAngle = (earthAngle + followOffset) % (Math.PI * 2);
+                phaseSlider.value = sunAngle.toFixed(2);
+            } else if (isTransitioning) {
+                let current = parseFloat(phaseSlider.value);
+                let diff = targetSunAngle - current;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+
+                if (Math.abs(diff) < 0.01) {
+                    sunAngle = targetSunAngle;
+                    isTransitioning = false;
+                } else {
+                    sunAngle = current + diff * 0.05;
+                }
+                phaseSlider.value = sunAngle.toFixed(2);
+            } else {
+                sunAngle = parseFloat(phaseSlider.value);
             }
 
-            // Position du soleil basée sur le slider
-            const angle = parseFloat(phaseSlider.value);
-            sunLight.position.set(Math.cos(angle) * 100, 0, Math.sin(angle) * 100);
-            // sunGroup.position.copy(sunLight.position); // Supprimé car sunGroup n'existe plus
-            updatePhaseText(angle);
+            const sunDist = 800;
+            sunLight.position.set(Math.cos(sunAngle) * sunDist, 0, Math.sin(sunAngle) * sunDist);
+            sunGroup.position.copy(sunLight.position);
+            updatePhaseText(sunAngle);
 
             // Rotation synchrone (la Lune présente toujours la même face à la Terre)
             // Ici, on fait tourner la Terre autour de la Lune pour le visuel
             earth.position.x = Math.cos(earthAngle) * 300;
             earth.position.z = Math.sin(earthAngle) * 300;
-            earth.rotation.y += 0.002;
+            earth.rotation.y += 0.002 * earthRotationMultiplier;
 
             // Vérification de l'alignement Terre-Lune-Soleil
-            updateSyzygyAndEclipse(angle, earthAngle);
+            updateSyzygyAndEclipse(sunAngle, earthAngle);
 
             // Mise à jour de la ligne de force
             if (forceLine.visible) {
