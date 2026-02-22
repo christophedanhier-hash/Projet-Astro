@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AstroTofdan</string>
+    <string name="title_activity_main">AstroTofdan</string>
+    <string name="package_name">be.AstroTofdan.app</string>
+    <string name="custom_url_scheme">be.AstroTofdan.app</string>
+</resources>
