@@ -298,8 +298,8 @@
             if (i > 0) {
                 const pts = [];
                 for(let j=0; j<=128; j++) {
-                    const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, (j/128)*Math.abs(p.period));
-                    pts.push(new THREE.Vector3(pos.x, 0, pos.y));
+                    const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, (j/128)*Math.abs(p.period), p.i, p.node);
+                    pts.push(new THREE.Vector3(pos.x, pos.z, pos.y));
                 }
                 const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: p.color, transparent: true, opacity: 0.4 }));
                 scene.add(line); orbitesMeshes.push(line);
@@ -527,12 +527,12 @@
 
             planets.forEach((p, i) => {
                 if (i > 0) {
-                    const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, daysSinceJ2000);
-                    p.groupRef.position.set(pos.x, 0, pos.y); p.meshRef.rotation.y += 0.01; if (i === 3) posTerre.set(pos.x, 0, pos.y); 
+                    const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, daysSinceJ2000, p.i, p.node);
+                    p.groupRef.position.set(pos.x, pos.z, pos.y); p.meshRef.rotation.y += 0.01; if (i === 3) posTerre.set(pos.x, pos.z, pos.y); 
                     
                     // Mise à jour de l'historique et de la traînée
                     if (!isPaused) {
-                        p.history.push(new THREE.Vector3(pos.x, 0, pos.y));
+                        p.history.push(new THREE.Vector3(pos.x, pos.z, pos.y));
                         if (p.history.length > 200) p.history.shift();
                         p.trailGeometry.setFromPoints(p.history);
                     }
