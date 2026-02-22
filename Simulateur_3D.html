@@ -376,7 +376,7 @@
 
         const rConst = 85000; // Juste à l'intérieur du fond étoilé
         const lineMat = new THREE.LineBasicMaterial({ color: 0x4da8da, transparent: true, opacity: 0.5 });
-        const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 600, sizeAttenuation: true });
+        const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 600, sizeAttenuation: true, transparent: true });
 
         const allStarsGeo = new THREE.BufferGeometry();
         const allStarsPos = [];
@@ -552,6 +552,13 @@
 
             asteroidBelt.rotation.y += 0.0005; 
             kuiperBelt.rotation.y += 0.0002; 
+
+            // --- ANIMATION CONSTELLATIONS (Pulsation) ---
+            if (constellationGroup.visible) {
+                const pulse = 0.4 + Math.sin(Date.now() * 0.0025) * 0.2; // Oscille doucement entre 0.2 et 0.6
+                lineMat.opacity = pulse;
+                starMat.opacity = pulse + 0.3; // Les étoiles restent un peu plus brillantes que les lignes
+            }
 
             // --- ANIMATION DE LA GALAXIE ---
             if (Math.abs(currentGalaxyOpacity - targetGalaxyOpacity) > 0.01) {
