@@ -4,6 +4,15 @@ Bienvenue sur ce planétarium interactif ! Cet outil a été conçu pour explore
 
 ---
 
+## ✨ Nouveautés (Février 2026)
+
+- **Exploration Lunaire 3D** : Un tout nouveau module dédié à l'étude de la Lune, de ses phases et des phénomènes de syzygie.
+- **Vue Galactique Réaliste** : Le Système Solaire est désormais positionné avec précision au sein du Bras d'Orion dans la Voie Lactée.
+- **Optimisation Mobile** : Support complet du zoom tactile (pinch-to-zoom) et interface compacte pour tablettes et smartphones.
+- **Guide Intégré** : Accès direct aux instructions depuis la page d'accueil.
+
+---
+
 ## 🧭 Navigation et Contrôle de la Caméra
 
 - **Zoom manuel (🔍 + / 🔍 -)** : Utilisez ces boutons ou la molette de votre souris pour vous rapprocher des planètes ou avoir une vue d'ensemble du Système solaire. Sur mobile, le pincement à deux doigts permet également de zoomer.

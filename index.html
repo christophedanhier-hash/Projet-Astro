@@ -61,6 +61,21 @@
         .modal-content h3 { color: #79c2ea; margin-top: 20px; }
         .modal-content ul { padding-left: 20px; }
         .modal-content li { margin-bottom: 8px; }
+
+        /* Style pour la barre de recherche */
+        #guide-search {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #4da8da;
+            border-radius: 8px;
+            background: #1a2535;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+        #guide-search:focus { box-shadow: 0 0 8px rgba(77, 168, 218, 0.5); }
     </style>
 </head>
 <body>
@@ -87,6 +102,16 @@
             <span class="close-btn">&times;</span>
             <h1 style="color: #4da8da; text-align: center;">🌌 Guide de l'Utilisateur</h1>
             
+            <input type="text" id="guide-search" placeholder="🔍 Rechercher une fonction (ex: zoom, nuit, éclipse...)...">
+            
+            <h2 style="color: #ffcc00; border-color: rgba(255, 204, 0, 0.3);">✨ Nouveautés (Février 2026)</h2>
+            <ul>
+                <li><strong>Exploration Lunaire 3D</strong> : Un tout nouveau module dédié à l'étude de la Lune, de ses phases et des phénomènes de syzygie.</li>
+                <li><strong>Vue Galactique Réaliste</strong> : Le Système Solaire est désormais positionné avec précision au sein du Bras d'Orion dans la Voie Lactée.</li>
+                <li><strong>Optimisation Mobile</strong> : Support complet du zoom tactile (pinch-to-zoom) et interface compacte pour tablettes et smartphones.</li>
+                <li><strong>Guide Intégré</strong> : Accès direct aux instructions depuis cette fenêtre modale.</li>
+            </ul>
+
             <h2>🏠 1. Page d'Accueil</h2>
             <p>Votre centre de commande pour accéder aux simulateurs et au journal d'observation.</p>
 
@@ -129,6 +154,7 @@
         const modal = document.getElementById("guide-modal");
         const btn = document.getElementById("open-guide");
         const span = document.getElementsByClassName("close-btn")[0];
+        const searchInput = document.getElementById("guide-search");
 
         btn.onclick = function() {
             modal.style.display = "block";
@@ -146,6 +172,21 @@
                 document.body.style.overflow = "auto";
             }
         }
+
+        // Logique de recherche
+        searchInput.oninput = function() {
+            const term = this.value.toLowerCase();
+            const contentParts = modal.querySelectorAll('h2, h3, p, li');
+            
+            contentParts.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                if (text.includes(term)) {
+                    item.style.display = ""; // Affiche l'élément
+                } else {
+                    item.style.display = "none"; // Cache l'élément
+                }
+            });
+        };
     </script>
 </body>
 </html>
