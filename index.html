@@ -63,10 +63,11 @@
         .modal-content li { margin-bottom: 8px; }
 
         /* Style pour la barre de recherche */
+        .search-container { position: relative; width: 100%; margin: 15px 0; }
         #guide-search {
             width: 100%;
             padding: 12px;
-            margin: 15px 0;
+            padding-right: 40px; /* Espace pour le bouton effacer */
             border: 1px solid #4da8da;
             border-radius: 8px;
             background: #1a2535;
@@ -76,6 +77,20 @@
             outline: none;
         }
         #guide-search:focus { box-shadow: 0 0 8px rgba(77, 168, 218, 0.5); }
+        
+        #clear-search {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none; /* Caché par défaut */
+            transition: color 0.2s;
+        }
+        #clear-search:hover { color: #4da8da; }
     </style>
 </head>
 <body>
@@ -94,6 +109,19 @@
 
     <main>
         <p>Bienvenue sur mon espace dédié à l'astronomie. Choisissez un simulateur ci-dessus pour explorer le système solaire !</p>
+
+        <!-- Représentation de la Galaxie et position du Système Solaire -->
+        <div id="galaxy-preview-container" style="margin-top: 40px; position: relative; display: inline-block; padding: 25px; background: rgba(10,15,30,0.4); border-radius: 20px; border: 1px solid rgba(77,168,218,0.2); box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+            <h3 style="color: #79c2ea; margin-bottom: 20px; font-size: 1.2rem;">Notre situation dans la Voie Lactée</h3>
+            <div style="position: relative; width: 400px; height: 400px; margin: 0 auto;">
+                <canvas id="galaxy-preview-canvas" width="400" height="400" style="border-radius: 50%; background: radial-gradient(circle, #0a0f1e 0%, #020205 100%);"></canvas>
+                <div id="solar-system-marker" style="position: absolute; pointer-events: none; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%);">
+                    <span style="font-size: 0.75rem; white-space: nowrap; background: #ffcc00; color: #050510; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-bottom: 4px; box-shadow: 0 0 10px #ffcc00;">📍 Système Solaire (Bras d'Orion)</span>
+                    <span style="font-size: 1.5rem; filter: drop-shadow(0 0 5px black);">🚩</span>
+                </div>
+            </div>
+            <p style="font-size: 0.85rem; color: #666; margin-top: 15px; font-style: italic;">Schéma simplifié de la structure spirale de notre galaxie</p>
+        </div>
     </main>
 
     <!-- Fenêtre Modal du Guide -->
@@ -101,8 +129,11 @@
         <div class="modal-content">
             <span class="close-btn">&times;</span>
             <h1 style="color: #4da8da; text-align: center;">🌌 Guide de l'Utilisateur</h1>
-            
-            <input type="text" id="guide-search" placeholder="🔍 Rechercher une fonction (ex: zoom, nuit, éclipse...)...">
+
+            <div class="search-container">
+                <input type="text" id="guide-search" placeholder="🔍 Rechercher une fonction (ex: zoom, nuit, éclipse...)...">
+                <span id="clear-search" title="Effacer la recherche">&times;</span>
+            </div>
             
             <h2 style="color: #ffcc00; border-color: rgba(255, 204, 0, 0.3);">✨ Nouveautés (Février 2026)</h2>
             <ul>
@@ -155,6 +186,7 @@
         const btn = document.getElementById("open-guide");
         const span = document.getElementsByClassName("close-btn")[0];
         const searchInput = document.getElementById("guide-search");
+        const clearBtn = document.getElementById("clear-search");
 
         btn.onclick = function() {
             modal.style.display = "block";
@@ -176,6 +208,10 @@
         // Logique de recherche
         searchInput.oninput = function() {
             const term = this.value.toLowerCase();
+            
+            // Affiche ou cache le bouton effacer
+            clearBtn.style.display = term.length > 0 ? "block" : "none";
+
             const contentParts = modal.querySelectorAll('h2, h3, p, li');
             
             contentParts.forEach(item => {
@@ -187,6 +223,74 @@
                 }
             });
         };
+
+        // Logique pour effacer la recherche
+        clearBtn.onclick = function() {
+            searchInput.value = "";
+            searchInput.oninput(); // Déclenche le filtrage pour tout réafficher
+            searchInput.focus();   // Redonne le focus au champ
+        };
+
+        // Dessin de la galaxie sur l'index
+        function drawGalaxyPreview() {
+            const canvas = document.getElementById('galaxy-preview-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            // Centre galactique (Bulbe)
+            const grd = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 60);
+            grd.addColorStop(0, "rgba(255, 255, 220, 0.8)");
+            grd.addColorStop(0.4, "rgba(255, 200, 100, 0.3)");
+            grd.addColorStop(1, "rgba(255, 200, 100, 0)");
+            ctx.fillStyle = grd;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 60, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bras spiraux (4 bras principaux)
+            const arms = 4;
+            const steps = 200;
+            const armColors = ["rgba(77, 168, 218, 0.25)", "rgba(121, 194, 234, 0.2)", "rgba(77, 168, 218, 0.25)", "rgba(121, 194, 234, 0.2)"];
+            const armNames = ["Bras de Persée", "Bras du Sagittaire", "Bras de l'Écu-Croix", "Bras de la Règle-Cygne"];
+            
+            for (let j = 0; j < arms; j++) {
+                ctx.beginPath();
+                ctx.strokeStyle = armColors[j];
+                ctx.lineWidth = 15;
+                ctx.lineCap = "round";
+                
+                for (let i = 0; i < steps; i++) {
+                    let r = (i / steps) * 180;
+                    let angle = (j * Math.PI * 2 / arms) + (r * 0.035);
+                    let x = centerX + Math.cos(angle) * r;
+                    let y = centerY + Math.sin(angle) * r;
+                    
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // Ajout des noms des bras
+                ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+                ctx.font = "10px sans-serif";
+                ctx.textAlign = "center";
+                let labelAngle = (j * Math.PI * 2 / arms) + (140 * 0.035);
+                ctx.fillText(armNames[j], centerX + Math.cos(labelAngle) * 155, centerY + Math.sin(labelAngle) * 155);
+            }
+
+            // Positionnement du drapeau (Bras d'Orion)
+            const marker = document.getElementById('solar-system-marker');
+            const rSun = 115; // Distance du centre
+            const angleSun = 2.45; // Angle pour tomber dans le bras d'Orion
+            const markerX = centerX + Math.cos(angleSun) * rSun;
+            const markerY = centerY + Math.sin(angleSun) * rSun;
+            
+            marker.style.left = markerX + 'px';
+            marker.style.top = markerY + 'px';
+        }
+        drawGalaxyPreview();
     </script>
 </body>
 </html>
