@@ -67,40 +67,9 @@
 
         // Lumière du Soleil (Directionnelle pour créer des phases nettes)
         const sunLight = new THREE.DirectionalLight(0xffffff, 2);
-        sunLight.position.set(800, 0, 0);
+        sunLight.position.set(100, 0, 0);
         sunLight.castShadow = true;
         scene.add(sunLight);
-
-        // --- LE SOLEIL (Représentation visuelle) ---
-        const sunGroup = new THREE.Group();
-        scene.add(sunGroup);
-
-        // Cœur du soleil
-        const sunCore = new THREE.Mesh(
-            new THREE.SphereGeometry(15, 32, 32),
-            new THREE.MeshBasicMaterial({ color: 0xffffff })
-        );
-        sunGroup.add(sunCore);
-
-        // Halo lumineux (Glow)
-        const sunHaloCanv = document.createElement('canvas');
-        sunHaloCanv.width = 256; sunHaloCanv.height = 256;
-        const hCtx = sunHaloCanv.getContext('2d');
-        const hGrd = hCtx.createRadialGradient(128, 128, 0, 128, 128, 128);
-        hGrd.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-        hGrd.addColorStop(0.2, 'rgba(255, 240, 150, 0.5)');
-        hGrd.addColorStop(0.5, 'rgba(255, 200, 50, 0.1)');
-        hGrd.addColorStop(1, 'rgba(255, 150, 0, 0)');
-        hCtx.fillStyle = hGrd; hCtx.fillRect(0, 0, 256, 256);
-
-        const sunHaloMat = new THREE.SpriteMaterial({
-            map: new THREE.CanvasTexture(sunHaloCanv),
-            transparent: true,
-            blending: THREE.AdditiveBlending
-        });
-        const sunHalo = new THREE.Sprite(sunHaloMat);
-        sunHalo.scale.set(180, 180, 1); // Taille du halo
-        sunGroup.add(sunHalo);
 
         // Lumière cendrée (faible lumière reflétée par la Terre)
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.05);
@@ -330,9 +299,8 @@
 
             // Position du soleil basée sur le slider
             const angle = parseFloat(phaseSlider.value);
-            const sunDist = 800;
-            sunLight.position.set(Math.cos(angle) * sunDist, 0, Math.sin(angle) * sunDist);
-            sunGroup.position.copy(sunLight.position);
+            sunLight.position.set(Math.cos(angle) * 100, 0, Math.sin(angle) * 100);
+            // sunGroup.position.copy(sunLight.position); // Supprimé car sunGroup n'existe plus
             updatePhaseText(angle);
 
             // Rotation synchrone (la Lune présente toujours la même face à la Terre)
