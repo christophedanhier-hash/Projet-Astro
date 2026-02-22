@@ -31,6 +31,36 @@
             background-color: transparent;
             color: #4da8da;
         }
+
+        /* Styles pour le Modal du Guide */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; top: 0; 
+            width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.85); 
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #0a0f1e;
+            margin: 5% auto;
+            padding: 30px;
+            border: 1px solid #4da8da;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 15px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: left;
+            line-height: 1.6;
+        }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: #4da8da; }
+        .modal-content h2 { color: #4da8da; border-bottom: 1px solid rgba(77,168,218,0.3); padding-bottom: 10px; margin-top: 25px; }
+        .modal-content h3 { color: #79c2ea; margin-top: 20px; }
+        .modal-content ul { padding-left: 20px; }
+        .modal-content li { margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -44,11 +74,78 @@
         <a href="Simulateur_2D.html" class="bouton-astro">🔭 Explorer le Système Solaire en 2D</a>
         <a href="Simulateur_3D.html" class="bouton-astro">🌌 Explorer le Système Solaire en 3D</a>
         <a href="Simulateur_Lune_3D.html" class="bouton-astro">🌑 Explorer la Lune</a>
+        <button id="open-guide" class="bouton-astro" style="background-color: #3a4a5a; border-color: #3a4a5a; color: white;">📖 Guide d'utilisation</button>
     </nav>
 
     <main>
         <p>Bienvenue sur mon espace dédié à l'astronomie. Choisissez un simulateur ci-dessus pour explorer le système solaire !</p>
     </main>
 
+    <!-- Fenêtre Modal du Guide -->
+    <div id="guide-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h1 style="color: #4da8da; text-align: center;">🌌 Guide de l'Utilisateur</h1>
+            
+            <h2>🏠 1. Page d'Accueil</h2>
+            <p>Votre centre de commande pour accéder aux simulateurs et au journal d'observation.</p>
+
+            <h2>🔭 2. Simulateur 2D</h2>
+            <h3>Navigation</h3>
+            <ul>
+                <li><strong>Zoom</strong> : Molette, boutons +/- ou pincement tactile.</li>
+                <li><strong>Sélection</strong> : Cliquez sur un astre pour sa fiche technique.</li>
+            </ul>
+            <h3>Fonctions</h3>
+            <ul>
+                <li><strong>Mode Nuit</strong> : Filtre rouge pour l'observation réelle.</li>
+                <li><strong>Indicateurs</strong> : Opposition (ligne blanche) et Élongation (Mercure/Vénus).</li>
+            </ul>
+
+            <h2>🌌 3. Simulateur 3D</h2>
+            <ul>
+                <li><strong>Immersion</strong> : Visualisation des orbites elliptiques avec traînées (trails).</li>
+                <li><strong>Vue Galactique</strong> : Bouton pour situer le Soleil dans le Bras d'Orion de la Voie Lactée.</li>
+            </ul>
+
+            <h2>🌑 4. Exploration Lunaire 3D</h2>
+            <ul>
+                <li><strong>Phases</strong> : Slider manuel ou suivi temps réel de l'alignement.</li>
+                <li><strong>Syzygie</strong> : Simulation d'éclipse lunaire (Lune rouge) lors d'un alignement parfait.</li>
+                <li><strong>Géologie</strong> : Marqueurs cliquables pour identifier les mers lunaires.</li>
+            </ul>
+
+            <h2>✨ 5. Astuces d'observation</h2>
+            <ul>
+                <li>Utilisez l'indicateur d'<strong>Opposition</strong> pour savoir quand une planète est au plus proche de la Terre.</li>
+                <li>Consultez la <strong>Visibilité</strong> pour savoir si l'astre est au-dessus de l'horizon à Sombreffe.</li>
+            </ul>
+
+            <p style="text-align: center; margin-top: 30px; font-size: 0.8rem; color: #666;">Astro.TofDan.be - (c) 2026</p>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById("guide-modal");
+        const btn = document.getElementById("open-guide");
+        const span = document.getElementsByClassName("close-btn")[0];
+
+        btn.onclick = function() {
+            modal.style.display = "block";
+            document.body.style.overflow = "hidden"; // Empêche le défilement de la page de fond
+        }
+
+        span.onclick = function() {
+            modal.style.display = "none";
+            document.body.style.overflow = "auto";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+                document.body.style.overflow = "auto";
+            }
+        }
+    </script>
 </body>
 </html>
