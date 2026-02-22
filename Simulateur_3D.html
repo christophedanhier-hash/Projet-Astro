@@ -438,6 +438,7 @@
         });
 
         const vecCible = new THREE.Vector3();
+        const vecOrigin = new THREE.Vector3(0, 0, 0); // Vecteur réutilisable pour l'origine
         
         function animate() {
             requestAnimationFrame(animate);
@@ -489,7 +490,7 @@
 
             if (trackedBody && trackedBody.meshRef) {
                 trackedBody.meshRef.getWorldPosition(vecCible); controls.target.lerp(vecCible, 0.1);
-            } else { controls.target.lerp(new THREE.Vector3(0,0,0), 0.05); }
+            } else { controls.target.lerp(vecOrigin, 0.05); }
 
             controls.update(); renderer.render(scene, camera);
         }

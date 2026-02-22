@@ -346,6 +346,9 @@
             isTransitioning = true;
         });
 
+        const vecOrigin = new THREE.Vector3(0, 0, 0); // Optimisation : Vecteur origine réutilisable
+        const vecSunVirtual = new THREE.Vector3();    // Optimisation : Vecteur temporaire
+
         function updateSyzygyAndEclipse(sunAngle, earthAngle) {
             const rawDiff = Math.abs(sunAngle - earthAngle) % (Math.PI * 2);
             const diff = Math.min(rawDiff, Math.abs(rawDiff - Math.PI), Math.abs(rawDiff - 2 * Math.PI));
@@ -371,8 +374,8 @@
             if (syzygyLineCb.checked) {
                 syzygyLine.visible = true;
                 syzygyLineMat.opacity = 0.1 + 0.7 * alignmentFactor;
-                const sunPosVirtual = sunLight.position.clone().normalize().multiplyScalar(500);
-                syzygyLineGeo.setFromPoints([sunPosVirtual, new THREE.Vector3(0,0,0), earth.position]);
+                vecSunVirtual.copy(sunLight.position).normalize().multiplyScalar(500);
+                syzygyLineGeo.setFromPoints([vecSunVirtual, vecOrigin, earth.position]);
                 syzygyLabel.visible = isAligned;
                 syzygyLabel.material.opacity = syzygyLineMat.opacity;
             } else {
@@ -435,7 +438,7 @@
 
             // Mise à jour de la ligne de force
             if (forceLine.visible) {
-                forceLineGeo.setFromPoints([new THREE.Vector3(0,0,0), earth.position]);
+                forceLineGeo.setFromPoints([vecOrigin, earth.position]);
                 forceLine.computeLineDistances();
             }
 
