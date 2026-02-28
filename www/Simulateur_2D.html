@@ -42,10 +42,18 @@
         #close-info { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-weight: bold; font-size: 1.2rem; transition: 0.2s; }
         #close-info:hover { color: white; transform: scale(1.1); }
 
-        /* Correctif Android : Force le mode CLAIR sur la racine pour affecter les dialogues système (calendrier) */
-        html.is-android { color-scheme: light; }
-        /* On force l'input en blanc pour être cohérent avec le popup clair */
-        html.is-android input[type=date] { background: #ffffff; color: #000000; border: 1px solid #aaaaaa; }
+        /* --- CALENDRIER PERSONNALISÉ --- */
+        #calendar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; }
+        #custom-calendar { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a2535; border: 1px solid #4da8da; border-radius: 10px; padding: 15px; z-index: 1000; width: 280px; box-shadow: 0 0 25px rgba(0,0,0,0.8); font-family: sans-serif; }
+        #custom-calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        #custom-calendar-header button { background: #3a4a5a; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 5px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        #custom-calendar-header button:hover { background: #4da8da; color: #000; }
+        #custom-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+        .calendar-day-header { font-weight: bold; color: #4da8da; font-size: 0.8rem; padding-bottom: 5px; }
+        .calendar-day { padding: 8px 0; cursor: pointer; border-radius: 4px; color: #ddd; font-size: 0.9rem; }
+        .calendar-day:hover { background: #3a4a5a; color: #fff; }
+        .calendar-day.selected { background: #4da8da; color: #050510; font-weight: bold; box-shadow: 0 0 10px rgba(77,168,218,0.4); }
+        .calendar-day.empty { cursor: default; background: transparent; }
     </style>
 </head>
 <body>
@@ -66,7 +74,7 @@
                 <div class="control-group">
                     <label style="font-size: 0.9rem;">🗓️ Date : <span id="date-display" class="highlight"></span></label>
                     <div style="display:flex; gap:5px;">
-                        <input type="date" id="date-picker">
+                        <input type="text" id="date-input" readonly style="text-align:center; cursor:pointer;" placeholder="Cliquez pour changer">
                         <button id="today-btn" title="Revenir à aujourd'hui" style="flex: 0 0 auto; padding: 5px 10px;">📅</button>
                     </div>
                 </div>
@@ -120,15 +128,22 @@
         <p style="margin:4px 0 0 0; font-size:0.9rem; display:none;" id="tt-line3"></p>
     </div>
 
+    <!-- Structure du Calendrier Custom -->
+    <div id="calendar-overlay"></div>
+    <div id="custom-calendar">
+        <div id="custom-calendar-header">
+            <button id="cal-prev">&lt;</button>
+            <span id="cal-month-year" style="font-weight:bold; color:white; font-size:1.1rem;"></span>
+            <button id="cal-next">&gt;</button>
+        </div>
+        <div id="custom-calendar-grid"></div>
+        <button id="cal-close" style="margin-top:15px; width:100%; background:#882222; border:1px solid #ff4444;">Fermer</button>
+    </div>
+
     <canvas id="solar-system"></canvas>
 
     <script type="module">
         import { J2000, getOrbitalPosition, PLANETS_DATA } from './astro-logic.js';
-
-        // Détection automatique : Si on est sur Android, on ajoute une classe pour adapter le CSS
-        if (/Android/i.test(navigator.userAgent)) {
-            document.documentElement.classList.add('is-android');
-        }
 
         const canvas = document.getElementById('solar-system');
         const ctx = canvas.getContext('2d');
@@ -142,20 +157,56 @@
         const obsLat = 50.53 * Math.PI / 180; 
         const obsLon = 4.60; 
 
-        const datePicker = document.getElementById('date-picker');
+        const dateInput = document.getElementById('date-input');
         const dateDisplay = document.getElementById('date-display');
-        datePicker.value = simulatedDate.toISOString().split('T')[0]; // Utiliser .value pour éviter les pbs de fuseau horaire
+        
+        function updateDateInputDisplay() {
+            dateInput.value = simulatedDate.toISOString().split('T')[0];
+        }
+        updateDateInputDisplay();
 
-        datePicker.addEventListener('change', (e) => {
-            const dateParts = e.target.value.split('-'); // "YYYY-MM-DD"
-            simulatedDate = new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2], 12, 0, 0));
-            planets.forEach(p => { p.history = []; if(p.moons) p.moons.forEach(m => m.history = []) });
-        });
+        // --- LOGIQUE DU CALENDRIER CUSTOM ---
+        let calDate = new Date(simulatedDate);
+
+        function renderCalendar() {
+            const grid = document.getElementById('custom-calendar-grid'); grid.innerHTML = '';
+            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+            const daysShort = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+            
+            document.getElementById('cal-month-year').innerText = `${monthNames[calDate.getUTCMonth()]} ${calDate.getUTCFullYear()}`;
+            daysShort.forEach(d => { const div = document.createElement('div'); div.className = 'calendar-day-header'; div.innerText = d; grid.appendChild(div); });
+
+            const firstDay = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth(), 1));
+            const lastDay = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth() + 1, 0));
+            
+            for(let i=0; i<firstDay.getUTCDay(); i++) { const div = document.createElement('div'); div.className = 'calendar-day empty'; grid.appendChild(div); }
+
+            for(let i=1; i<=lastDay.getUTCDate(); i++) {
+                const div = document.createElement('div'); div.className = 'calendar-day'; div.innerText = i;
+                if (i === simulatedDate.getUTCDate() && calDate.getUTCMonth() === simulatedDate.getUTCMonth() && calDate.getUTCFullYear() === simulatedDate.getUTCFullYear()) div.classList.add('selected');
+                div.onclick = () => {
+                    simulatedDate = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth(), i, 12, 0, 0));
+                    updateDateInputDisplay();
+                    planets.forEach(p => { p.history = []; if(p.moons) p.moons.forEach(m => m.history = []) });
+                    closeCalendar();
+                };
+                grid.appendChild(div);
+            }
+        }
+
+        function openCalendar() { calDate = new Date(simulatedDate); renderCalendar(); document.getElementById('custom-calendar').style.display = 'block'; document.getElementById('calendar-overlay').style.display = 'block'; }
+        function closeCalendar() { document.getElementById('custom-calendar').style.display = 'none'; document.getElementById('calendar-overlay').style.display = 'none'; }
+
+        document.getElementById('date-input').addEventListener('click', openCalendar);
+        document.getElementById('cal-prev').onclick = () => { calDate.setUTCMonth(calDate.getUTCMonth() - 1); renderCalendar(); };
+        document.getElementById('cal-next').onclick = () => { calDate.setUTCMonth(calDate.getUTCMonth() + 1); renderCalendar(); };
+        document.getElementById('cal-close').onclick = closeCalendar;
+        document.getElementById('calendar-overlay').onclick = closeCalendar;
 
         document.getElementById('today-btn').addEventListener('click', () => {
             const now = new Date();
             simulatedDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0));
-            datePicker.value = simulatedDate.toISOString().split('T')[0];
+            updateDateInputDisplay();
             planets.forEach(p => { p.history = []; if(p.moons) p.moons.forEach(m => m.history = []) });
         });
 
