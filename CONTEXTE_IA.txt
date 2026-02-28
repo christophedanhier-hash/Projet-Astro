@@ -25,9 +25,10 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
    - **Précision** : Les orbites sont calculées via l'équation de Kepler et les dates sont gérées en UTC.
    - **Interface (UI)** : Un calendrier personnalisé en HTML/CSS a été implémenté pour garantir la compatibilité sur toutes les plateformes. Un bouton "Aujourd'hui" a été ajouté.
    - **Compatibilité Mobile** : Le clic sur les planètes en 3D a été corrigé pour fonctionner sur les écrans tactiles (Android).
-   - **Nouveau Module Terre** : Structure de base en place (Three.js), Terre inclinée à 23.5°, éclairage solaire statique pour l'instant.
+   - **Module Terre (Finalisé)** : Visualisation interactive des saisons, contrôle de l'inclinaison (Tilt), géolocalisation, texture jour/nuit, et affichage des dates de solstices/équinoxes.
+   - **Accueil & Guide** : Nouvelle mise en page en grille pour l'accueil et mise à jour complète du guide utilisateur.
 
 5. PROCHAINE ÉTAPE :
-   Implémenter la logique astronomique dans le module Terre : calculer la position du Soleil en fonction de la date pour animer le cycle des saisons.
+   Poursuivre le développement et l'optimisation sur l'ensemble des 4 simulateurs (2D, 3D, Lune, Terre) pour enrichir l'expérience utilisateur.
 
 J'attends tes instructions pour commencer.
