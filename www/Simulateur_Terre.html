@@ -212,7 +212,7 @@
             const termPoints = [];
             for (let i = 0; i <= 128; i++) {
                 const theta = (i / 128) * Math.PI * 2;
-                termPoints.push(new THREE.Vector3(Math.cos(theta) * 1.02, Math.sin(theta) * 1.02, 0));
+                termPoints.push(new THREE.Vector3(Math.cos(theta) * 1.04, Math.sin(theta) * 1.04, 0));
             }
             termGeo.setFromPoints(termPoints);
             terminatorLine = new THREE.Line(termGeo, new THREE.LineBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.7 }));
@@ -530,7 +530,7 @@
             labelsGroup = new THREE.Group();
             earthGroup.add(labelsGroup);
 
-            const rad = 1.01; // Légèrement au-dessus de la surface pour éviter le z-fighting
+            const rad = 1.03; // Au-dessus des nuages (1.015) pour rester visible
             
             // Fonction utilitaire pour créer un cercle de latitude
             function createLatLine(latDeg, color, isDashed = false) {
@@ -587,7 +587,7 @@
             gridGroup.visible = false;
 
             const mat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 });
-            const rad = 1.002;
+            const rad = 1.02; // Au-dessus des nuages
 
             // Parallèles (Latitude)
             for (let lat = -80; lat <= 80; lat += 10) {
@@ -626,7 +626,7 @@
             // Note : Ajustement des angles pour correspondre au mapping standard des textures Three.js
             const phi = (90 - lat) * (Math.PI / 180);
             const theta = (lon + 180) * (Math.PI / 180); // Décalage de 180° souvent nécessaire selon la texture
-            const r = 1.01; // Juste au-dessus de la surface
+            const r = 1.03; // Au-dessus des nuages
 
             const x = -r * Math.sin(phi) * Math.cos(theta);
             const z = r * Math.sin(phi) * Math.sin(theta);
