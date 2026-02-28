@@ -42,8 +42,10 @@
         #close-info { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-weight: bold; font-size: 1.2rem; transition: 0.2s; }
         #close-info:hover { color: white; transform: scale(1.1); }
 
-        /* Correctif Android : Force le calendrier en mode clair (texte noir sur fond blanc) pour garantir la lisibilité */
-        body.is-android input[type=date] { color-scheme: light; background: #f0f0f0; color: #000000; border-color: #ccc; }
+        /* Correctif Android : Force le mode CLAIR sur la racine pour affecter les dialogues système (calendrier) */
+        html.is-android { color-scheme: light; }
+        /* On force l'input en blanc pour être cohérent avec le popup clair */
+        html.is-android input[type=date] { background: #ffffff; color: #000000; border: 1px solid #aaaaaa; }
     </style>
 </head>
 <body>
@@ -63,7 +65,10 @@
 
                 <div class="control-group">
                     <label style="font-size: 0.9rem;">🗓️ Date : <span id="date-display" class="highlight"></span></label>
-                    <input type="date" id="date-picker">
+                    <div style="display:flex; gap:5px;">
+                        <input type="date" id="date-picker">
+                        <button id="today-btn" title="Revenir à aujourd'hui" style="flex: 0 0 auto; padding: 5px 10px;">📅</button>
+                    </div>
                 </div>
 
                 <div class="control-group">
@@ -89,7 +94,7 @@
                 <div class="control-group checkbox-group"><input type="checkbox" id="toggle-kuiper" checked><label for="toggle-kuiper">Ceinture de Kuiper</label></div>
             </div>
             <a href="index.html" style="text-decoration:none;"><button id="home-btn" style="background:#3a4a5a; color:#fff; margin-top:10px; width:100%">🏠 Accueil</button></a>
-            <div class="info-text" style="text-align: center;">Version 1.1 (28/02/2026)</div>
+            <div class="info-text" style="text-align: center;">Version 1.2 (28/02/2026)</div>
         </div>
         <button id="toggle-ui-btn">👁️ Masquer</button>
     </div>
@@ -122,7 +127,7 @@
 
         // Détection automatique : Si on est sur Android, on ajoute une classe pour adapter le CSS
         if (/Android/i.test(navigator.userAgent)) {
-            document.body.classList.add('is-android');
+            document.documentElement.classList.add('is-android');
         }
 
         const canvas = document.getElementById('solar-system');
@@ -144,6 +149,13 @@
         datePicker.addEventListener('change', (e) => {
             const dateParts = e.target.value.split('-'); // "YYYY-MM-DD"
             simulatedDate = new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2], 12, 0, 0));
+            planets.forEach(p => { p.history = []; if(p.moons) p.moons.forEach(m => m.history = []) });
+        });
+
+        document.getElementById('today-btn').addEventListener('click', () => {
+            const now = new Date();
+            simulatedDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0));
+            datePicker.value = simulatedDate.toISOString().split('T')[0];
             planets.forEach(p => { p.history = []; if(p.moons) p.moons.forEach(m => m.history = []) });
         });
 
