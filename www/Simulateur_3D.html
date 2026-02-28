@@ -272,6 +272,23 @@
         sCtx.fillStyle=grd; sCtx.fillRect(0,0,256,256);
         const sunTex = new THREE.CanvasTexture(sunCanv);
 
+        function createPlanetLabel(text) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.font = 'bold 32px sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'black';
+            ctx.shadowBlur = 3;
+            ctx.fillText(text, 128, 42);
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(40, 10, 1);
+            return sprite;
+        }
+
         planets.forEach((p, i) => {
             const group = new THREE.Group(); scene.add(group);
             const material = (i === 0) ? new THREE.MeshBasicMaterial({ map: sunTex }) : new THREE.MeshStandardMaterial({ color: new THREE.Color(p.color) });
@@ -282,6 +299,11 @@
             mesh.userData = { id: i, isMoon: false, ref: p };
             group.add(mesh); cliquables.push(mesh);
             p.meshRef = mesh; p.groupRef = group;
+
+            const label = createPlanetLabel(p.name);
+            label.position.y = p.radius + (p.name === "Soleil" ? 50 : 8);
+            if (p.name === "Soleil") label.scale.set(100, 25, 1);
+            group.add(label);
 
             // Initialisation des traînées (trails) pour les planètes
             if (i > 0) {
