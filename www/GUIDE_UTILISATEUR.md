@@ -4,11 +4,11 @@ Bienvenue sur ce planétarium interactif ! Cet outil a été conçu pour explore
 
 ---
 
-## ✨ Nouveautés (Février 2026)
+## ✨ Nouveautés v2.5 (Février 2026)
 
 - **Exploration Lunaire 3D** : Un tout nouveau module dédié à l'étude de la Lune, de ses phases et des phénomènes de syzygie.
 - **Vue Galactique Réaliste** : Le Système Solaire est désormais positionné avec précision au sein du Bras d'Orion dans la Voie Lactée.
-- **Simulateur Terre & Saisons** : Comprenez la mécanique des saisons grâce à une visualisation interactive de l'inclinaison terrestre.
+- **Terre Photoréaliste** : Le module Terre bénéficie désormais de textures HD, de relief, de reflets océaniques, de nuages animés et d'une atmosphère volumétrique.
 - **Optimisation Mobile** : Support complet du zoom tactile (pinch-to-zoom) et interface compacte pour tablettes et smartphones.
 - **Guide Intégré** : Accès direct aux instructions depuis la page d'accueil.
 
@@ -74,6 +74,7 @@ Ce module pédagogique permet de visualiser les conséquences de l'inclinaison d
 - **Mécanique des Saisons** : Visualisez comment l'inclinaison fixe de 23.5° crée les saisons lorsque la Terre tourne autour du Soleil.
 - **Contrôle du Tilt** : Modifiez l'inclinaison de l'axe (de 0° à 180°) pour voir ce qui se passerait si la Terre était "droite" (pas de saisons) ou "couchée" (saisons extrêmes).
 - **Géolocalisation** : Placez un marqueur sur votre position réelle pour voir l'ensoleillement chez vous.
+- **Rendu Réaliste** : Profitez d'une vue imprenable avec atmosphère, nuages dynamiques et cycle jour/nuit précis.
 - **Dates Clés** : Affichez les dates exactes des solstices et équinoxes de l'année en cours.
 
 ---
