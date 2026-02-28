@@ -70,11 +70,14 @@
                     <button id="zoom-in-btn">🔍 +</button>
                     <button id="zoom-out-btn">🔍 -</button>
                 </div>
+                <button id="anim-view-btn" style="margin-top:5px;">🔄 Vue Polaire / Équateur</button>
+                <button id="geoloc-btn" style="margin-top:5px; background:#2a9d8f;">📍 Ma position</button>
             </div>
 
             <div class="control-group checkbox-group"><input type="checkbox" id="toggle-markers" checked><label for="toggle-markers">Tropiques & Équateur</label></div>
             <div class="control-group checkbox-group"><input type="checkbox" id="toggle-orbit" checked><label for="toggle-orbit">Orbite du Soleil</label></div>
             <div class="control-group checkbox-group"><input type="checkbox" id="toggle-axis" checked><label for="toggle-axis">Axe de rotation</label></div>
+            <div class="control-group checkbox-group"><input type="checkbox" id="toggle-terminator"><label for="toggle-terminator">Ligne jour/nuit (Terminateur)</label></div>
 
             <a href="index.html" style="text-decoration:none;"><button id="home-btn" style="background:#3a4a5a; color:#fff; margin-top:10px; width:100%">🏠 Accueil</button></a>
             <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 8px;">Version 2.0 (28/02/2026)</div>
@@ -111,11 +114,16 @@
         // --- Variables Globales ---
         let scene, camera, renderer, controls;
         let earthMesh, earthGroup, sunLight;
-        let axisHelper, markersGroup, orbitGroup;
+        let axisHelper, markersGroup, orbitGroup, terminatorLine, userMarker;
 
         // --- Variables Temporelles ---
         let simulatedDate = new Date();
         let timeSpeed = 0; // Vitesse de défilement (jours par frame)
+
+        // --- Variables Animation Caméra ---
+        let viewMode = 'EQUATOR';
+        let isViewAnimating = false;
+        let targetCameraPos = new THREE.Vector3();
 
         // --- Éléments UI ---
         const dateInput = document.getElementById('date-input');
@@ -165,6 +173,18 @@
             const ambientLight = new THREE.AmbientLight(0x333333);
             scene.add(ambientLight);
 
+            // Ligne du terminateur (Jour/Nuit)
+            const termGeo = new THREE.BufferGeometry();
+            const termPoints = [];
+            for (let i = 0; i <= 128; i++) {
+                const theta = (i / 128) * Math.PI * 2;
+                termPoints.push(new THREE.Vector3(Math.cos(theta) * 1.02, Math.sin(theta) * 1.02, 0));
+            }
+            termGeo.setFromPoints(termPoints);
+            terminatorLine = new THREE.Line(termGeo, new THREE.LineBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.7 }));
+            terminatorLine.visible = false;
+            scene.add(terminatorLine);
+
             // Gestion du redimensionnement
             window.addEventListener('resize', onWindowResize);
 
@@ -189,11 +209,69 @@
                 const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
                 camera.position.copy(controls.target).addScaledVector(direction, Math.min(newDist, controls.maxDistance));
             });
+            
+            // Bouton Animation Vue
+            document.getElementById('anim-view-btn').addEventListener('click', () => {
+                const dist = camera.position.distanceTo(controls.target);
+                if (viewMode === 'EQUATOR') {
+                    targetCameraPos.set(0, dist, 0.1); // Vue Polaire (quasi zénith)
+                    viewMode = 'POLAR';
+                } else {
+                    targetCameraPos.set(0, 0, dist); // Vue Équatoriale
+                    viewMode = 'EQUATOR';
+                }
+                isViewAnimating = true;
+            });
+            
+            // Bouton Géolocalisation
+            document.getElementById('geoloc-btn').addEventListener('click', () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const lat = pos.coords.latitude;
+                        const lon = pos.coords.longitude;
+                        
+                        if (userMarker) markersGroup.remove(userMarker);
+                        
+                        // Conversion Lat/Lon -> Vector3
+                        const radius = 1.01;
+                        const phi = lat * (Math.PI / 180);
+                        const theta = -lon * (Math.PI / 180); 
+                        
+                        const x = radius * Math.cos(phi) * Math.cos(theta); 
+                        const y = radius * Math.sin(phi);
+                        const z = radius * Math.cos(phi) * Math.sin(theta);
+                        
+                        // Création du marqueur (Épingle)
+                        const pinGroup = new THREE.Group();
+                        pinGroup.position.set(x, y, z);
+                        pinGroup.lookAt(0, 0, 0); // Pointe vers le centre
+                        
+                        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.1, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+                        stem.rotation.x = Math.PI / 2;
+                        stem.position.z = 0.05;
+                        pinGroup.add(stem);
+                        
+                        const head = new THREE.Mesh(new THREE.SphereGeometry(0.02, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+                        head.position.z = 0.1;
+                        pinGroup.add(head);
+                        
+                        userMarker = pinGroup;
+                        markersGroup.add(userMarker);
+                        
+                        alert(`Position marquée : ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`);
+                    }, (err) => {
+                        alert("Erreur : " + err.message);
+                    });
+                } else {
+                    alert("Géolocalisation non supportée.");
+                }
+            });
 
             // Toggles
             document.getElementById('toggle-markers').addEventListener('change', (e) => { markersGroup.visible = e.target.checked; });
             document.getElementById('toggle-orbit').addEventListener('change', (e) => { orbitGroup.visible = e.target.checked; });
             document.getElementById('toggle-axis').addEventListener('change', (e) => { axisHelper.visible = e.target.checked; });
+            document.getElementById('toggle-terminator').addEventListener('change', (e) => { terminatorLine.visible = e.target.checked; });
 
             // Toggle UI
             const toggleUiBtn = document.getElementById('toggle-ui-btn');
@@ -359,6 +437,13 @@
         function animate() {
             requestAnimationFrame(animate);
 
+            if (isViewAnimating) {
+                camera.position.lerp(targetCameraPos, 0.05);
+                if (camera.position.distanceTo(targetCameraPos) < 0.1) {
+                    isViewAnimating = false;
+                }
+            }
+
             // Avancement du temps
             if (timeSpeed > 0) {
                 simulatedDate.setTime(simulatedDate.getTime() + (timeSpeed * 86400000));
@@ -373,6 +458,9 @@
             // Mise à jour position Soleil
             const sunPos = getSunPosition(simulatedDate);
             sunLight.position.set(sunPos.x, 0, -sunPos.z);
+
+            // Mise à jour du terminateur (toujours face au soleil)
+            if (terminatorLine) terminatorLine.lookAt(sunLight.position);
 
             controls.update();
             renderer.render(scene, camera);
