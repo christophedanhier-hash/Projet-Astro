@@ -21,15 +21,11 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
    - Guide & Observations : Pages d'aide et carnet de notes.
 
 4. ÉTAT ACTUEL :
-   Le projet est en version 2.5 (Mise à jour majeure : Terre Photoréaliste & Atmosphère).
+   Le projet est en version 2.5 (Mise à jour majeure : Terre HD & Lisibilité).
    - **Précision** : Les orbites sont calculées via l'équation de Kepler et les dates sont gérées en UTC.
    - **Interface (UI)** : Un calendrier personnalisé en HTML/CSS a été implémenté pour garantir la compatibilité sur toutes les plateformes. Un bouton "Aujourd'hui" a été ajouté.
    - **Compatibilité Mobile** : Le clic sur les planètes en 3D a été corrigé pour fonctionner sur les écrans tactiles (Android).
-   - **Module Terre (v2.5)** : Rendu photoréaliste avec textures HD (Normal/Specular), couche de nuages animée, atmosphère volumétrique (Shader), saisons et géolocalisation.
+   - **Module Terre (v2.5)** : Rendu haute définition (Textures Diffuse + Normal + Specular) optimisé pour la lisibilité (nuages retirés pour voir les tropiques), saisons et géolocalisation.
    - **Accueil & Guide** : Mise à jour des numéros de version et du guide utilisateur pour refléter les nouveautés v2.5.
-
-5. PROCHAINE ÉTAPE :
-   - Ajouter les comètes (ex: Halley) dans le Simulateur 2D.
-   - Créer une fonctionnalité de "Voyage vers..." (caméra cinématique) dans le Simulateur 3D.
 
 J'attends tes instructions pour commencer.
