@@ -78,17 +78,24 @@
                 <div class="btn-group">
                     <button id="zoom-in-btn">🔍 +</button>
                     <button id="zoom-out-btn">🔍 -</button>
+                    <button id="reset-all-btn" style="background:#d63031;" title="Réinitialiser la simulation">♻️</button>
                 </div>
-                <button id="anim-view-btn" style="margin-top:5px;">🔄 Vue Polaire / Équateur</button>
-                <button id="geoloc-btn" style="margin-top:5px; background:#2a9d8f;">📍 Ma position</button>
-                <button id="seasons-btn" style="margin-top:5px; background:#e67e22;">📅 Dates Saisons</button>
+                <div class="btn-group" style="margin-top:5px;">
+                    <button id="anim-view-btn" style="font-size:0.8rem;">🔄 Vue</button>
+                    <button id="geoloc-btn" style="background:#2a9d8f; font-size:0.8rem;">📍 Moi</button>
+                    <button id="seasons-btn" style="background:#e67e22; font-size:0.8rem;">📅 Saisons</button>
+                    <button id="texture-btn" style="background:#2c3e50; font-size:0.8rem;">🌃 Nuit</button>
+                </div>
             </div>
 
-            <div class="control-group checkbox-group"><input type="checkbox" id="toggle-markers" checked><label for="toggle-markers">Tropiques & Équateur</label></div>
-            <div class="control-group checkbox-group"><input type="checkbox" id="toggle-orbit" checked><label for="toggle-orbit">Orbite du Soleil</label></div>
-            <div class="control-group checkbox-group"><input type="checkbox" id="toggle-axis" checked><label for="toggle-axis">Axe de rotation</label></div>
-            <div class="control-group checkbox-group"><input type="checkbox" id="toggle-terminator"><label for="toggle-terminator">Ligne jour/nuit (Terminateur)</label></div>
-            <div class="control-group checkbox-group"><input type="checkbox" id="toggle-grid"><label for="toggle-grid">Grille Lat/Lon</label></div>
+            <details style="margin-bottom:10px; border:1px solid rgba(255,255,255,0.2); border-radius:5px; padding:5px; background:rgba(0,0,0,0.2);">
+                <summary style="cursor:pointer; font-size:0.9rem; color:#4da8da; font-weight:bold; outline:none;">👁️ Options d'affichage</summary>
+                <div class="control-group checkbox-group" style="margin-top:5px;"><input type="checkbox" id="toggle-markers" checked><label for="toggle-markers">Tropiques & Équateur</label></div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-orbit" checked><label for="toggle-orbit">Orbite du Soleil</label></div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-axis" checked><label for="toggle-axis">Axe de rotation</label></div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-terminator"><label for="toggle-terminator">Ligne jour/nuit</label></div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-grid"><label for="toggle-grid">Grille Lat/Lon</label></div>
+            </details>
 
             <a href="index.html" style="text-decoration:none;"><button id="home-btn" style="background:#3a4a5a; color:#fff; margin-top:10px; width:100%">🏠 Accueil</button></a>
             <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 8px;">Version 2.0 (28/02/2026)</div>
@@ -131,6 +138,7 @@
             rotationSpeed: 0.005,
             // Utilisation de la même source fiable que le simulateur 3D pour la texture
             textureUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
+            textureUrlNight: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_lights_2048.png',
             sunDistance: 8 // Distance de la lumière pour la visualisation
         };
 
@@ -318,9 +326,55 @@
                 
                 document.getElementById('seasons-panel').style.display = 'block';
             });
+
+            // Bouton Texture (Vue Nuit)
+            let isNightTexture = false;
+            document.getElementById('texture-btn').addEventListener('click', (e) => {
+                isNightTexture = !isNightTexture;
+                const btn = e.target;
+                const loader = new THREE.TextureLoader();
+                loader.setCrossOrigin('anonymous');
+                
+                if (isNightTexture) {
+                    btn.innerText = "☀️ Jour";
+                    btn.style.background = "#f1c40f";
+                    btn.style.color = "#000";
+                    loader.load(CONFIG.textureUrlNight, (tex) => {
+                        tex.colorSpace = THREE.SRGBColorSpace;
+                        earthMesh.material.map = tex;
+                        earthMesh.material.needsUpdate = true;
+                    });
+                } else {
+                    btn.innerText = "🌃 Nuit";
+                    btn.style.background = "#2c3e50";
+                    btn.style.color = "#fff";
+                    loader.load(CONFIG.textureUrl, (tex) => {
+                        tex.colorSpace = THREE.SRGBColorSpace;
+                        earthMesh.material.map = tex;
+                        earthMesh.material.needsUpdate = true;
+                    });
+                }
+            });
             
             document.getElementById('close-seasons').addEventListener('click', () => {
                 document.getElementById('seasons-panel').style.display = 'none';
+            });
+            
+            // Bouton Reset
+            document.getElementById('reset-all-btn').addEventListener('click', () => {
+                // Reset Date
+                simulatedDate = new Date();
+                updateDateDisplay();
+                // Reset Vitesse
+                timeSpeed = 0;
+                speedSlider.value = 0;
+                speedDisplay.innerText = "Pause";
+                // Reset Tilt
+                tiltSlider.value = 23.5;
+                updateTilt(23.5);
+                // Reset Caméra
+                controls.reset();
+                camera.position.set(0, 0, 6);
             });
 
             // Toggles
