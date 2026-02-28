@@ -17,16 +17,17 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
    - Simulateur 2D (`Simulateur_2D.html`) : Vue "du dessus" avec orbites, astéroïdes et calculs de visibilité locale.
    - Simulateur 3D (`Simulateur_3D.html`) : Vue immersive Three.js avec textures, fond étoilé et positionnement réaliste.
    - Module Lunaire (`Simulateur_Lune_3D.html`) : Focus sur les phases de la Lune, la libration et les syzygies.
+   - Simulateur Terre (`Simulateur_Terre.html`) : Visualisation des saisons, de l'inclinaison axiale et de l'éclairement solaire.
    - Guide & Observations : Pages d'aide et carnet de notes.
 
 4. ÉTAT ACTUEL :
-   Le projet est en version 1.2. Il est fonctionnel sur le web et Android.
+   Le projet est en version 2.0 (Mise à jour majeure : Ajout du module Terre).
    - **Précision** : Les orbites sont calculées via l'équation de Kepler et les dates sont gérées en UTC.
    - **Interface (UI)** : Un calendrier personnalisé en HTML/CSS a été implémenté pour garantir la compatibilité sur toutes les plateformes. Un bouton "Aujourd'hui" a été ajouté.
    - **Compatibilité Mobile** : Le clic sur les planètes en 3D a été corrigé pour fonctionner sur les écrans tactiles (Android).
-   - **Fonctionnalités** : Les simulateurs 2D et 3D incluent un panneau d'information détaillé sur les astres et une vue galactique.
+   - **Nouveau Module Terre** : Structure de base en place (Three.js), Terre inclinée à 23.5°, éclairage solaire statique pour l'instant.
 
 5. PROCHAINE ÉTAPE :
-   Nous allons commencer le développement d'un nouveau module : un simulateur centré sur la Terre pour visualiser des phénomènes comme les saisons, l'inclinaison de l'axe, etc.
+   Implémenter la logique astronomique dans le module Terre : calculer la position du Soleil en fonction de la date pour animer le cycle des saisons.
 
-J'attends tes instructions pour commencer ce nouveau module.
+J'attends tes instructions pour commencer.
