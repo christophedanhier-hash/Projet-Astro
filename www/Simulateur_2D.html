@@ -236,6 +236,18 @@
         });
 
         const keplerK = Math.pow(365.25, 2) / Math.pow(130, 3);
+        
+        // Fonction pour résoudre l'équation de Kepler (M = E - e sin E)
+        // Cela garantit une position mathématiquement précise sur l'ellipse.
+        function solveKepler(M, e) {
+            let E = M; 
+            // Méthode de Newton-Raphson (5 itérations suffisent pour une haute précision)
+            for (let i = 0; i < 5; i++) {
+                E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+            }
+            return E; // Retourne l'Anomalie Excentrique
+        }
+
         const generateBelt = (count, aMin, aVar, eMin, eVar, size, colorBase) => {
             const belt = [];
             for (let i = 0; i < count; i++) {
@@ -392,7 +404,7 @@
                 const drawBelt = (belt) => {
                     belt.forEach(obj => {
                         let M = obj.baseAngle + (daysSinceJ2000 / obj.period) * Math.PI * 2;
-                        let angle = M + 2 * obj.e * Math.sin(M);
+                        let angle = solveKepler(M, obj.e); // Utilisation de la résolution exacte
                         const c = obj.a * obj.e, b = obj.a * Math.sqrt(1 - obj.e*obj.e);
                         ctx.beginPath(); ctx.arc(-c + obj.a * Math.cos(angle), b * Math.sin(angle), obj.radius/zoomLevel, 0, Math.PI*2); 
                         ctx.fillStyle = obj.color; ctx.fill();
@@ -404,7 +416,7 @@
                 let earthAngle = 0, earthX = 0, earthY = 0;
                 if (planets[3]) {
                     let M = planets[3].baseAngle + (daysSinceJ2000 / planets[3].period) * Math.PI * 2;
-                    let angle = M + 2 * planets[3].e * Math.sin(M);
+                    let angle = solveKepler(M, planets[3].e); // Correction pour la Terre aussi
                     const c = planets[3].a * planets[3].e, b = planets[3].a * Math.sqrt(1 - planets[3].e*planets[3].e);
                     earthX = -c + planets[3].a * Math.cos(angle);
                     earthY = b * Math.sin(angle);

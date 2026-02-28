@@ -272,6 +272,47 @@
         sCtx.fillStyle=grd; sCtx.fillRect(0,0,256,256);
         const sunTex = new THREE.CanvasTexture(sunCanv);
 
+        // --- MOTEUR KEPLERIEN (PRÉCISION GARANTIE) ---
+        // Résolution de M = E - e sin E par méthode de Newton-Raphson
+        function solveKepler(M, e) {
+            let E = M;
+            for (let i = 0; i < 5; i++) {
+                E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+            }
+            return E;
+        }
+
+        // Calcul de la position 3D exacte selon les éléments orbitaux
+        function getKeplerPosition(a, e, period, baseAngle, omega, days, iDeg, nodeDeg) {
+            const n = (2 * Math.PI) / period;
+            let M = baseAngle + n * days;
+            const E = solveKepler(M, e);
+            
+            // Coordonnées dans le plan orbital (P pointe vers le périhélie)
+            const P = a * (Math.cos(E) - e);
+            const Q = a * Math.sqrt(1 - e * e) * Math.sin(E);
+            
+            // Conversion des angles en radians
+            const w = (omega || 0) * Math.PI / 180;
+            const iRad = (iDeg || 0) * Math.PI / 180;
+            const node = (nodeDeg || 0) * Math.PI / 180;
+            
+            // 1. Rotation dans le plan (Argument du périhélie)
+            const x1 = P * Math.cos(w) - Q * Math.sin(w);
+            const y1 = P * Math.sin(w) + Q * Math.cos(w);
+            
+            // 2. Inclinaison par rapport à l'écliptique
+            const x2 = x1;
+            const y2 = y1 * Math.cos(iRad);
+            const z2 = y1 * Math.sin(iRad); // Hauteur par rapport au plan (Z astronomique)
+            
+            // 3. Orientation du plan (Longitude du nœud ascendant)
+            const x3 = x2 * Math.cos(node) - y2 * Math.sin(node);
+            const y3 = x2 * Math.sin(node) + y2 * Math.cos(node);
+            
+            return { x: x3, y: y3, z: z2 };
+        }
+
         function createPlanetLabel(text) {
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 64;
@@ -320,7 +361,7 @@
             if (i > 0) {
                 const pts = [];
                 for(let j=0; j<=128; j++) {
-                    const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, (j/128)*Math.abs(p.period), p.i, p.node);
+                    const pos = getKeplerPosition(p.a, p.e, p.period, p.baseAngle, p.omega, (j/128)*Math.abs(p.period), p.i, p.node);
                     pts.push(new THREE.Vector3(pos.x, pos.z, pos.y));
                 }
                 const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: p.color, transparent: true, opacity: 0.4 }));
@@ -549,7 +590,7 @@
 
             planets.forEach((p, i) => {
                 if (i > 0) {
-                    const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, daysSinceJ2000, p.i, p.node);
+                    const pos = getKeplerPosition(p.a, p.e, p.period, p.baseAngle, p.omega, daysSinceJ2000, p.i, p.node);
                     p.groupRef.position.set(pos.x, pos.z, pos.y); p.meshRef.rotation.y += 0.01; if (i === 3) posTerre.set(pos.x, pos.z, pos.y); 
                     
                     // Mise à jour de l'historique et de la traînée
