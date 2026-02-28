@@ -126,7 +126,7 @@ function createEarth() {
     textureLoader.setCrossOrigin('anonymous');
 
     const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
+        color: 0x2233ff, // Bleu par défaut (sécurité si la texture ne charge pas)
         roughness: 0.8,
         metalness: 0.1,
     });
@@ -135,6 +135,9 @@ function createEarth() {
         texture.colorSpace = THREE.SRGBColorSpace;
         material.map = texture;
         material.needsUpdate = true;
+        material.color.setHex(0xffffff); // On remet en blanc si la texture charge bien
+    }, undefined, (err) => {
+        console.warn("Erreur chargement texture Terre, utilisation couleur par défaut.", err);
     });
 
     earthMesh = new THREE.Mesh(geometry, material);
