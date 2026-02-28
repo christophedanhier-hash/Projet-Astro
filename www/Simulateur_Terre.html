@@ -98,7 +98,7 @@
             </details>
 
             <a href="index.html" style="text-decoration:none;"><button id="home-btn" style="background:#3a4a5a; color:#fff; margin-top:10px; width:100%">🏠 Accueil</button></a>
-            <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 8px;">Version 2.2 (Restaurée)</div>
+            <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 8px;">Version 2.4 (Nuages animés)</div>
         </div>
         <button id="toggle-ui-btn">👁️ Masquer l'interface</button>
     </div>
@@ -138,13 +138,16 @@
             rotationSpeed: 0.005,
             // Utilisation de la même source fiable que le simulateur 3D pour la texture
             textureUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
+            normalUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_normal_2048.jpg',
+            specularUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_specular_2048.jpg',
+            cloudsUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_clouds_1024.png',
             textureUrlNight: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_lights_2048.png',
             sunDistance: 8 // Distance de la lumière pour la visualisation
         };
 
         // --- Variables Globales ---
         let scene, camera, renderer, controls;
-        let earthMesh, earthGroup, sunLight;
+        let earthMesh, cloudMesh, earthGroup, sunLight;
         let axisHelper, markersGroup, labelsGroup, orbitGroup, terminatorLine, userMarker, gridGroup;
 
         // --- Variables Temporelles ---
@@ -388,23 +391,49 @@
             const textureLoader = new THREE.TextureLoader();
             textureLoader.setCrossOrigin('anonymous');
 
-            const material = new THREE.MeshStandardMaterial({
-                color: 0x2233ff, // Bleu par défaut (sécurité si la texture ne charge pas)
-                roughness: 0.8,
-                metalness: 0.1,
+            // Utilisation de MeshPhongMaterial pour mieux gérer la brillance des océans (Specular Map)
+            const material = new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                specular: 0x333333,
+                shininess: 15
             });
 
-            textureLoader.load(CONFIG.textureUrl, (texture) => {
-                texture.colorSpace = THREE.SRGBColorSpace;
-                material.map = texture;
+            // 1. Texture de couleur (Jour)
+            textureLoader.load(CONFIG.textureUrl, (tex) => {
+                tex.colorSpace = THREE.SRGBColorSpace;
+                material.map = tex;
                 material.needsUpdate = true;
-                material.color.setHex(0xffffff); // On remet en blanc si la texture charge bien
-            }, undefined, (err) => {
-                console.warn("Erreur chargement texture Terre, utilisation couleur par défaut.", err);
+            });
+
+            // 2. Normal Map (Relief)
+            textureLoader.load(CONFIG.normalUrl, (tex) => {
+                material.normalMap = tex;
+                material.normalScale.set(0.85, 0.85);
+            });
+
+            // 3. Specular Map (Reflets océans)
+            textureLoader.load(CONFIG.specularUrl, (tex) => {
+                material.specularMap = tex;
             });
 
             earthMesh = new THREE.Mesh(geometry, material);
             earthGroup.add(earthMesh);
+
+            // 4. Couche de Nuages
+            const cloudGeo = new THREE.SphereGeometry(1.015, 64, 64); // Légèrement plus grand que la Terre
+            const cloudMat = new THREE.MeshPhongMaterial({
+                transparent: true,
+                opacity: 0.8
+            });
+
+            textureLoader.load(CONFIG.cloudsUrl, (tex) => {
+                tex.colorSpace = THREE.SRGBColorSpace;
+                cloudMat.map = tex;
+                cloudMat.needsUpdate = true;
+            });
+
+            cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
+            earthGroup.add(cloudMesh);
 
             // Axe de rotation visuel (Ligne rouge traversant les pôles)
             const axisGeo = new THREE.BufferGeometry().setFromPoints([
@@ -660,6 +689,9 @@
             // Rotation de la Terre sur elle-même (Cycle Jour/Nuit)
             if (earthMesh) {
                 earthMesh.rotation.y += CONFIG.rotationSpeed;
+            }
+            if (cloudMesh) {
+                cloudMesh.rotation.y += CONFIG.rotationSpeed * 1.15; // Les nuages tournent un peu plus vite
             }
 
             // Mise à jour position Soleil
