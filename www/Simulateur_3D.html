@@ -115,7 +115,7 @@
         const scene = new THREE.Scene();
         // Modification majeure : La caméra peut voir jusqu'à 150 000 unités de distance !
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 150000);
-        camera.position.set(0, 500, 800);
+        camera.position.set(0, 900, 1800); // Recul de la caméra pour inclure Jupiter/Saturn dans le champ initial
         const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); // logarithmicDepthBuffer empêche le clipping
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace; 
@@ -495,6 +495,7 @@
         dp.addEventListener('change', e => {
             const dateParts = e.target.value.split('-'); // "YYYY-MM-DD"
             simulatedDate = new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2], 12, 0, 0));
+            planets.forEach(p => { p.history = []; }); // Réinitialiser les traînées lors du changement de date pour éviter les artefacts
         });
         
         let speed = 1, isPaused = false;
