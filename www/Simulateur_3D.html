@@ -652,7 +652,14 @@
 
         window.addEventListener('click', e => {
             if (e.target.closest('#ui-container') || e.target.closest('#info-panel')) return;
-            if (hoveredObj) { trackedBody = hoveredObj; showInfo(trackedBody); const ud = raycaster.intersectObjects(cliquables)[0].object.userData; targetSelect.value = ud.isMoon ? `${ud.id}-${ud.moonId}` : ud.id;
+            
+            // Correction Mobile : Recalcul de l'intersection au clic (car pas de survol/hover sur tactile)
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1; 
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera); 
+            const intersects = raycaster.intersectObjects(cliquables);
+
+            if (intersects.length > 0) { const obj = intersects[0].object; trackedBody = obj.userData.ref; showInfo(trackedBody); targetSelect.value = obj.userData.isMoon ? `${obj.userData.id}-${obj.userData.moonId}` : obj.userData.id;
             } else { trackedBody = null; document.getElementById('info-panel').classList.remove('active'); targetSelect.value = "-1"; }
         });
 
