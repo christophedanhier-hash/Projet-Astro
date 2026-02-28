@@ -98,7 +98,7 @@
             </details>
 
             <a href="index.html" style="text-decoration:none;"><button id="home-btn" style="background:#3a4a5a; color:#fff; margin-top:10px; width:100%">🏠 Accueil</button></a>
-            <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 8px;">Version 2.4 (Nuages animés)</div>
+            <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 8px;">Version 2.5 (Atmosphère)</div>
         </div>
         <button id="toggle-ui-btn">👁️ Masquer l'interface</button>
     </div>
@@ -434,6 +434,26 @@
 
             cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
             earthGroup.add(cloudMesh);
+
+            // 5. Atmosphère (Halo externe - Shader)
+            const vertexShader = `
+                varying vec3 vNormal;
+                void main() {
+                    vNormal = normalize(normalMatrix * normal);
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `;
+            const fragmentShader = `
+                varying vec3 vNormal;
+                void main() {
+                    float intensity = pow(0.55 + dot(vNormal, vec3(0, 0, 1.0)), 4.0);
+                    gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * intensity;
+                }
+            `;
+            const atmosGeo = new THREE.SphereGeometry(1.2, 64, 64);
+            const atmosMat = new THREE.ShaderMaterial({ vertexShader, fragmentShader, blending: THREE.AdditiveBlending, side: THREE.BackSide, transparent: true });
+            const atmosMesh = new THREE.Mesh(atmosGeo, atmosMat);
+            earthGroup.add(atmosMesh);
 
             // Axe de rotation visuel (Ligne rouge traversant les pôles)
             const axisGeo = new THREE.BufferGeometry().setFromPoints([
