@@ -47,7 +47,7 @@
             <h1>🌍 Terre & Saisons</h1>
             
             <div class="info-box">
-                <span class="highlight">Inclinaison :</span> 23.5° (Fixe)<br>
+                <span class="highlight">Inclinaison :</span> <span id="tilt-display">23.5°</span><br>
                 <span class="highlight">Position Soleil :</span> <span id="sun-angle">--</span><br>
                 <span id="saison-display" class="season-text">--</span>
             </div>
@@ -66,12 +66,22 @@
             </div>
 
             <div class="control-group">
+                <label style="font-size: 0.9rem;">Inclinaison (Tilt) :</label>
+                <input type="range" id="tilt-slider" min="0" max="180" step="0.5" value="23.5">
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#aaa;">
+                    <span>0°</span><span>23.5°</span><span>90°</span><span>180°</span>
+                </div>
+                <button id="reset-tilt" style="margin-top:5px; font-size:0.8rem; padding:4px;">Rétablir 23.5°</button>
+            </div>
+
+            <div class="control-group">
                 <div class="btn-group">
                     <button id="zoom-in-btn">🔍 +</button>
                     <button id="zoom-out-btn">🔍 -</button>
                 </div>
                 <button id="anim-view-btn" style="margin-top:5px;">🔄 Vue Polaire / Équateur</button>
                 <button id="geoloc-btn" style="margin-top:5px; background:#2a9d8f;">📍 Ma position</button>
+                <button id="seasons-btn" style="margin-top:5px; background:#e67e22;">📅 Dates Saisons</button>
             </div>
 
             <div class="control-group checkbox-group"><input type="checkbox" id="toggle-markers" checked><label for="toggle-markers">Tropiques & Équateur</label></div>
@@ -97,6 +107,18 @@
         <button id="cal-close" style="margin-top:15px; width:100%; background:#882222; border:1px solid #ff4444;">Fermer</button>
     </div>
 
+    <!-- Panneau Dates Saisons -->
+    <div id="seasons-panel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(10,15,30,0.95); padding:20px; border:1px solid #4da8da; border-radius:10px; z-index:1001; text-align:center; min-width:280px; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
+        <h3 style="color:#4da8da; margin-top:0; border-bottom:1px solid rgba(77,168,218,0.3); padding-bottom:10px;">📅 Saisons <span id="seasons-year"></span></h3>
+        <div style="text-align:left; margin-bottom:15px; line-height:1.8; font-size:0.95rem;">
+            <div style="border-bottom:1px solid rgba(255,255,255,0.1);">🌱 Équinoxe Mars : <span id="date-march" style="color:#fff; font-weight:bold; float:right;"></span></div>
+            <div style="border-bottom:1px solid rgba(255,255,255,0.1);">☀️ Solstice Juin : <span id="date-june" style="color:#fff; font-weight:bold; float:right;"></span></div>
+            <div style="border-bottom:1px solid rgba(255,255,255,0.1);">🍂 Équinoxe Sept. : <span id="date-sept" style="color:#fff; font-weight:bold; float:right;"></span></div>
+            <div>❄️ Solstice Déc. : <span id="date-dec" style="color:#fff; font-weight:bold; float:right;"></span></div>
+        </div>
+        <button id="close-seasons" style="background:#882222; border:1px solid #ff4444; width:100%;">Fermer</button>
+    </div>
+
     <!-- Script Principal -->
     <script type="module">
         import * as THREE from 'https://esm.sh/three@0.160.0';
@@ -114,7 +136,7 @@
         // --- Variables Globales ---
         let scene, camera, renderer, controls;
         let earthMesh, earthGroup, sunLight;
-        let axisHelper, markersGroup, orbitGroup, terminatorLine, userMarker;
+        let axisHelper, markersGroup, labelsGroup, orbitGroup, terminatorLine, userMarker;
 
         // --- Variables Temporelles ---
         let simulatedDate = new Date();
@@ -196,6 +218,19 @@
                 speedDisplay.innerText = timeSpeed === 0 ? "Pause" : timeSpeed + " j/frame";
             });
 
+            // Gestion du Tilt
+            const tiltSlider = document.getElementById('tilt-slider');
+            const tiltDisplay = document.getElementById('tilt-display');
+            const resetTiltBtn = document.getElementById('reset-tilt');
+
+            const updateTilt = (val) => {
+                tiltDisplay.innerText = val.toFixed(1) + '°';
+                if (earthGroup) earthGroup.rotation.z = val * (Math.PI / 180);
+            };
+
+            tiltSlider.addEventListener('input', (e) => updateTilt(parseFloat(e.target.value)));
+            resetTiltBtn.addEventListener('click', () => { tiltSlider.value = 23.5; updateTilt(23.5); });
+
             // Boutons Zoom
             document.getElementById('zoom-in-btn').addEventListener('click', () => {
                 const dist = camera.position.distanceTo(controls.target);
@@ -266,9 +301,32 @@
                     alert("Géolocalisation non supportée.");
                 }
             });
+            
+            // Bouton Saisons
+            document.getElementById('seasons-btn').addEventListener('click', () => {
+                const year = simulatedDate.getFullYear();
+                document.getElementById('seasons-year').innerText = year;
+                
+                const seasons = getSeasons(year);
+                const options = { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
+                
+                document.getElementById('date-march').innerText = seasons.march.toLocaleDateString('fr-FR', options);
+                document.getElementById('date-june').innerText = seasons.june.toLocaleDateString('fr-FR', options);
+                document.getElementById('date-sept').innerText = seasons.sept.toLocaleDateString('fr-FR', options);
+                document.getElementById('date-dec').innerText = seasons.dec.toLocaleDateString('fr-FR', options);
+                
+                document.getElementById('seasons-panel').style.display = 'block';
+            });
+            
+            document.getElementById('close-seasons').addEventListener('click', () => {
+                document.getElementById('seasons-panel').style.display = 'none';
+            });
 
             // Toggles
-            document.getElementById('toggle-markers').addEventListener('change', (e) => { markersGroup.visible = e.target.checked; });
+            document.getElementById('toggle-markers').addEventListener('change', (e) => { 
+                markersGroup.visible = e.target.checked; 
+                if(labelsGroup) labelsGroup.visible = e.target.checked;
+            });
             document.getElementById('toggle-orbit').addEventListener('change', (e) => { orbitGroup.visible = e.target.checked; });
             document.getElementById('toggle-axis').addEventListener('change', (e) => { axisHelper.visible = e.target.checked; });
             document.getElementById('toggle-terminator').addEventListener('change', (e) => { terminatorLine.visible = e.target.checked; });
@@ -384,6 +442,10 @@
         function createEarthMarkers() {
             markersGroup = new THREE.Group();
             earthMesh.add(markersGroup);
+            
+            // Groupe pour les textes (attaché à earthGroup pour ne pas tourner avec la surface)
+            labelsGroup = new THREE.Group();
+            earthGroup.add(labelsGroup);
 
             const rad = 1.01; // Légèrement au-dessus de la surface pour éviter le z-fighting
             
@@ -415,6 +477,25 @@
             // Tropiques (+/- 23.5°) (Orange #ffaa00 - Couleur solaire)
             markersGroup.add(createLatLine(23.5, 0xffaa00, true)); // Cancer
             markersGroup.add(createLatLine(-23.5, 0xffaa00, true)); // Capricorne
+            
+            // Étiquettes Textuelles
+            function createLabel(text, color) {
+                const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                ctx.font = 'bold 40px sans-serif'; ctx.fillStyle = color; ctx.textAlign = 'center';
+                ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
+                ctx.fillText(text, 256, 70);
+                const texture = new THREE.CanvasTexture(canvas);
+                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+                sprite.scale.set(1.5, 0.375, 1);
+                return sprite;
+            }
+            
+            const lblEquator = createLabel("Équateur", "#4da8da"); lblEquator.position.set(1.2, 0, 0);
+            const lblCancer = createLabel("Tropique du Cancer", "#ffaa00"); lblCancer.position.set(1.2, 0.4, 0);
+            const lblCapricorn = createLabel("Tropique du Capricorne", "#ffaa00"); lblCapricorn.position.set(1.2, -0.4, 0);
+            
+            labelsGroup.add(lblEquator, lblCancer, lblCapricorn);
         }
 
         function getSunPosition(date) {
@@ -432,6 +513,37 @@
             const z = Math.sin(radLambda) * CONFIG.sunDistance;
 
             return { x, z, lambda: lambda % 360 };
+        }
+        
+        // Calcul astronomique simplifié des saisons (Algorithme de Meeus)
+        function getSeasons(year) {
+            const Y = (year - 2000) / 1000;
+            const jd_march = 2451623.80984 + 365242.37404 * Y + 0.05169 * Y*Y - 0.00411 * Y*Y*Y - 0.00057 * Y*Y*Y*Y;
+            const jd_june = 2451716.56767 + 365241.62603 * Y + 0.00325 * Y*Y + 0.00888 * Y*Y*Y - 0.00030 * Y*Y*Y*Y;
+            const jd_sept = 2451810.21715 + 365242.01767 * Y - 0.11575 * Y*Y + 0.00337 * Y*Y*Y + 0.00078 * Y*Y*Y*Y;
+            const jd_dec = 2451900.05952 + 365242.74049 * Y - 0.06223 * Y*Y - 0.00823 * Y*Y*Y + 0.00032 * Y*Y*Y*Y;
+
+            function jdToDate(jd) {
+                const z = Math.floor(jd + 0.5);
+                const f = jd + 0.5 - z;
+                let alpha = Math.floor((z - 1867216.25) / 36524.25);
+                let a = z + 1 + alpha - Math.floor(alpha / 4);
+                let b = a + 1524;
+                let c = Math.floor((b - 122.1) / 365.25);
+                let d = Math.floor(365.25 * c);
+                let e = Math.floor((b - d) / 30.6001);
+                let day = b - d - Math.floor(30.6001 * e) + f;
+                let month = e < 14 ? e - 1 : e - 13;
+                let year = month > 2 ? c - 4716 : c - 4715;
+                return new Date(Date.UTC(year, month - 1, Math.floor(day), Math.floor((day % 1) * 24), Math.floor((((day % 1) * 24) % 1) * 60)));
+            }
+
+            return {
+                march: jdToDate(jd_march),
+                june: jdToDate(jd_june),
+                sept: jdToDate(jd_sept),
+                dec: jdToDate(jd_dec)
+            };
         }
 
         function animate() {
