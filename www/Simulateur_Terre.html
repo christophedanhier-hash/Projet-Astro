@@ -131,7 +131,6 @@
     <script type="module">
         import * as THREE from 'https://esm.sh/three@0.160.0';
         import { OrbitControls } from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-    <script type="module" src="Simulateur_Terre.js"></script>
 
         // --- Configuration ---
         const CONFIG = {
@@ -274,35 +273,7 @@
                     navigator.geolocation.getCurrentPosition((pos) => {
                         const lat = pos.coords.latitude;
                         const lon = pos.coords.longitude;
-                        
-                        if (userMarker) markersGroup.remove(userMarker);
-                        
-                        // Conversion Lat/Lon -> Vector3
-                        const radius = 1.01;
-                        const phi = lat * (Math.PI / 180);
-                        const theta = -lon * (Math.PI / 180); 
-                        
-                        const x = radius * Math.cos(phi) * Math.cos(theta); 
-                        const y = radius * Math.sin(phi);
-                        const z = radius * Math.cos(phi) * Math.sin(theta);
-                        
-                        // Création du marqueur (Épingle)
-                        const pinGroup = new THREE.Group();
-                        pinGroup.position.set(x, y, z);
-                        pinGroup.lookAt(0, 0, 0); // Pointe vers le centre
-                        
-                        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.1, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-                        stem.rotation.x = Math.PI / 2;
-                        stem.position.z = 0.05;
-                        pinGroup.add(stem);
-                        
-                        const head = new THREE.Mesh(new THREE.SphereGeometry(0.02, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
-                        head.position.z = 0.1;
-                        pinGroup.add(head);
-                        
-                        userMarker = pinGroup;
-                        markersGroup.add(userMarker);
-                        
+                        createLocationMarker(lat, lon);
                         alert(`Position marquée : ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`);
                     }, (err) => {
                         alert("Erreur : " + err.message);
@@ -449,6 +420,9 @@
 
             // Grille Lat/Lon
             createGrid();
+
+            // Marqueur de Géolocalisation (Par défaut : Sombreffe)
+            createLocationMarker(50.518, 4.596);
         }
 
         function createStars() {
@@ -595,6 +569,30 @@
             }
         }
 
+        function createLocationMarker(lat, lon) {
+            // Supprimer l'ancien marqueur s'il existe
+            if (userMarker) earthMesh.remove(userMarker);
+
+            // Conversion Lat/Lon vers Coordonnées Sphériques 3D
+            // Note : Ajustement des angles pour correspondre au mapping standard des textures Three.js
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lon + 180) * (Math.PI / 180); // Décalage de 180° souvent nécessaire selon la texture
+            const r = 1.01; // Juste au-dessus de la surface
+
+            const x = -r * Math.sin(phi) * Math.cos(theta);
+            const z = r * Math.sin(phi) * Math.sin(theta);
+            const y = r * Math.cos(phi);
+
+            // Création du marqueur (Petit point rouge)
+            const geometry = new THREE.SphereGeometry(0.015, 16, 16);
+            const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            
+            userMarker = new THREE.Mesh(geometry, material);
+            userMarker.position.set(x, y, z);
+            
+            earthMesh.add(userMarker);
+        }
+
         function getSunPosition(date) {
             // Calcul simplifié de la position du Soleil sur l'écliptique
             const start = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
@@ -611,7 +609,7 @@
 
             return { x, z, lambda: lambda % 360 };
         }
-        
+
         // Calcul astronomique simplifié des saisons (Algorithme de Meeus)
         function getSeasons(year) {
             const Y = (year - 2000) / 1000;
