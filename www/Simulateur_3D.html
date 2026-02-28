@@ -249,7 +249,9 @@
 
 
         // --- MATHÉMATIQUES SYSTÈME SOLAIRE ---
-        let simulatedDate = new Date(); 
+        // Correction pour la précision : Toujours travailler en UTC. On initialise à la date du jour à midi UTC.
+        const today = new Date();
+        let simulatedDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0));
         const obsLat = 50.53 * Math.PI / 180; 
         const obsLon = 4.60; 
         
@@ -488,8 +490,12 @@
             }
         });
 
-        const dp = document.getElementById('date-picker'); dp.valueAsDate = simulatedDate;
-        dp.addEventListener('change', e => simulatedDate = new Date(e.target.value));
+        const dp = document.getElementById('date-picker');
+        dp.value = simulatedDate.toISOString().split('T')[0]; // Utiliser .value pour éviter les pbs de fuseau horaire
+        dp.addEventListener('change', e => {
+            const dateParts = e.target.value.split('-'); // "YYYY-MM-DD"
+            simulatedDate = new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2], 12, 0, 0));
+        });
         
         let speed = 1, isPaused = false;
         document.getElementById('speed-slider').addEventListener('input', e => { speed = parseFloat(e.target.value); document.getElementById('speed-display').innerText = speed + " j/sec"; });

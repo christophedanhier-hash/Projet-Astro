@@ -121,18 +121,20 @@
         window.addEventListener('resize', () => { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; });
         width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight;
 
-        let simulatedDate = new Date(); 
+        // Correction pour la précision : Toujours travailler en UTC. On initialise à la date du jour à midi UTC.
+        const today = new Date();
+        let simulatedDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0));
         const obsLat = 50.53 * Math.PI / 180; 
         const obsLon = 4.60; 
 
         const datePicker = document.getElementById('date-picker');
         const dateDisplay = document.getElementById('date-display');
-        datePicker.valueAsDate = simulatedDate;
+        datePicker.value = simulatedDate.toISOString().split('T')[0]; // Utiliser .value pour éviter les pbs de fuseau horaire
 
         datePicker.addEventListener('change', (e) => {
-            simulatedDate = new Date(e.target.value);
-            planets.forEach(p => p.history = []);
-            planets.forEach(p => { if(p.moons) p.moons.forEach(m => m.history = []) });
+            const dateParts = e.target.value.split('-'); // "YYYY-MM-DD"
+            simulatedDate = new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2], 12, 0, 0));
+            planets.forEach(p => { p.history = []; if(p.moons) p.moons.forEach(m => m.history = []) });
         });
 
         let isNightMode = false;
