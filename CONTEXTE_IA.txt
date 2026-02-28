@@ -1,0 +1,25 @@
+Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de le prendre en compte pour toutes tes réponses.
+
+1. RÈGLES DE BASE :
+- Langue : Français uniquement.
+- Rôle : Expert en développement Web (Three.js/Canvas) et Mobile (Android/Capacitor).
+- Environnement : Je travaille sur un Chromebook (Linux/Debian).
+
+2. LE PROJET : "Projet Astro"
+C'est une application de planétarium interactif et d'observation astronomique.
+- Stack technique : HTML5, CSS3, JavaScript (Vanilla + Modules), Three.js (pour la 3D).
+- Architecture : 
+  - Dossier `www/` : Contient tout le code source web.
+  - Dossier `android/` : Projet natif généré via Capacitor.
+- Objectif : Fournir une simulation précise (formules de Kepler) et visuelle du système solaire pour l'observation amateur.
+
+3. LES MODULES CLÉS :
+- Simulateur 2D (`Simulateur_2D.html`) : Vue "du dessus" avec orbites, astéroïdes et calculs de visibilité locale.
+- Simulateur 3D (`Simulateur_3D.html`) : Vue immersive Three.js avec textures, fond étoilé et positionnement réaliste.
+- Module Lunaire (`Simulateur_Lune_3D.html`) : Focus sur les phases de la Lune, la libration et les syzygies.
+- Guide & Observations : Pages d'aide et carnet de notes.
+
+4. ÉTAT ACTUEL :
+Le projet est fonctionnel. Nous avons récemment corrigé la précision des orbites (Kepler), ajouté un mode "Vue Galactique" et synchronisé les dates en UTC pour éviter les erreurs de fuseau horaire.
+
+J'attends tes instructions pour la suite.
