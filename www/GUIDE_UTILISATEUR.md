@@ -8,6 +8,7 @@ Bienvenue sur ce planétarium interactif ! Cet outil a été conçu pour explore
 
 - **Exploration Lunaire 3D** : Un tout nouveau module dédié à l'étude de la Lune, de ses phases et des phénomènes de syzygie.
 - **Vue Galactique Réaliste** : Le Système Solaire est désormais positionné avec précision au sein du Bras d'Orion dans la Voie Lactée.
+- **Simulateur Terre & Saisons** : Comprenez la mécanique des saisons grâce à une visualisation interactive de l'inclinaison terrestre.
 - **Optimisation Mobile** : Support complet du zoom tactile (pinch-to-zoom) et interface compacte pour tablettes et smartphones.
 - **Guide Intégré** : Accès direct aux instructions depuis la page d'accueil.
 
@@ -64,6 +65,16 @@ Personnalisez votre vue spatiale en activant ou désactivant différents calques
 - **Les "Rebelles" du Système** : Grâce à la grille écliptique, observez l'orbite très inclinée de Pluton, qui "plonge" littéralement à travers le plan des autres planètes pour croiser l'orbite de Neptune. Ne manquez pas non plus la Comète de Halley, dont l'orbite est rétrograde : elle tourne dans le sens inverse de toutes les autres planètes !
 
 - **Ceintures d'Astéroïdes** : Visualisez la dynamique de la Ceinture Principale (entre Mars et Jupiter) et de la lointaine et glacée Ceinture de Kuiper (au-delà de Neptune).
+
+---
+
+## 🌍 Simulateur Terre & Saisons
+Ce module pédagogique permet de visualiser les conséquences de l'inclinaison de l'axe terrestre.
+
+- **Mécanique des Saisons** : Visualisez comment l'inclinaison fixe de 23.5° crée les saisons lorsque la Terre tourne autour du Soleil.
+- **Contrôle du Tilt** : Modifiez l'inclinaison de l'axe (de 0° à 180°) pour voir ce qui se passerait si la Terre était "droite" (pas de saisons) ou "couchée" (saisons extrêmes).
+- **Géolocalisation** : Placez un marqueur sur votre position réelle pour voir l'ensoleillement chez vous.
+- **Dates Clés** : Affichez les dates exactes des solstices et équinoxes de l'année en cours.
 
 ---
 
