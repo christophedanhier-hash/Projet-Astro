@@ -28,4 +28,6 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
    - **Module Terre (v2.5)** : Rendu haute définition (Textures Diffuse + Normal + Specular) optimisé pour la lisibilité (nuages retirés pour voir les tropiques), saisons et géolocalisation.
    - **Accueil & Guide** : Mise à jour des numéros de version et du guide utilisateur pour refléter les nouveautés v2.5.
 
+5. A la reprise refaire un check de l'ensemble du projet "Projet Astro" pour bien comprendre la structure de celui-ci 
+
 J'attends tes instructions pour commencer.
