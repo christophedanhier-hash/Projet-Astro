@@ -401,6 +401,11 @@
     }, { passive: false });
 
         function draw() {
+            if (document.hidden) {
+                setTimeout(draw, 500); // Mode économie d'énergie
+                return;
+            }
+
             ctx.fillStyle = '#020205'; ctx.fillRect(0, 0, width, height);
             ctx.save(); ctx.translate(width / 2, height / 2);
 

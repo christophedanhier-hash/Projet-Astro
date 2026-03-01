@@ -157,6 +157,7 @@
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 150000);
         camera.position.set(0, 900, 1800); // Recul de la caméra pour inclure Jupiter/Saturn dans le champ initial
         const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); // logarithmicDepthBuffer empêche le clipping
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimisation batterie : Plafond à 2.0
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace; 
         document.body.appendChild(renderer.domElement);
@@ -210,7 +211,7 @@
         const colorCore = new THREE.Color(0xffeebb); // Cœur hyper lumineux
         const colorArm = new THREE.Color(0x3377ff);  // Bras bleus d'étoiles jeunes
 
-        const numStars = 50000;
+        const numStars = 30000; // Optimisation Mobile : Réduction pour fluidité sur tous devices
         const galaxyRadius = 35000;
         const arms = 4;
         const spin = 7.0; // Plus de torsion pour correspondre à la structure réelle et à la 2D
@@ -648,7 +649,12 @@
         const vecOrigin = new THREE.Vector3(0, 0, 0); // Vecteur réutilisable pour l'origine
         
         function animate() {
+            if (document.hidden) {
+                setTimeout(animate, 500); // Mode économie d'énergie en arrière-plan
+                return;
+            }
             requestAnimationFrame(animate);
+
             if (!isPaused) { simulatedDate.setTime(simulatedDate.getTime() + (speed * 86400000 / 60)); }
             document.getElementById('date-display').innerText = simulatedDate.toLocaleDateString('fr-FR');
             
