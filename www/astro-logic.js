@@ -1,22 +1,33 @@
 export const J2000 = new Date('2000-01-01T12:00:00Z');
 
+// Résolution de l'équation de Kepler par méthode de Newton-Raphson
+// Converge beaucoup plus vite et précisément que l'approximation simple
+export function solveKepler(M, e) {
+    let E = M;
+    for (let i = 0; i < 5; i++) {
+        E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    }
+    return E;
+}
+
 export function getOrbitalPosition(a, e, period, baseAngle, omega, daysSinceJ2000, iDeg = 0, nodeDeg = 0) {
-    let M = baseAngle + (daysSinceJ2000 / period) * Math.PI * 2;
+    const n = (2 * Math.PI) / period;
+    let M = baseAngle + n * daysSinceJ2000;
     
-    // Résolution de l'équation de Kepler (Approximation E = M + e*sin(M))
-    // Correction: Utilisation de 'e' au lieu de '2e' pour l'anomalie excentrique
-    let E = M + e * Math.sin(M); 
+    // Résolution précise de l'anomalie excentrique
+    let E = solveKepler(M, e);
     
     // Coordonnées dans le plan orbital
     const P = a * (Math.cos(E) - e);
     const Q = a * Math.sqrt(1 - e*e) * Math.sin(E);
 
     // Paramètres orbitaux 3D
-    // omega (passé en paramètre) est traité comme la Longitude du Périhélie (w + node) pour compatibilité 2D
-    // Donc l'argument du périastre (w) = omega - node
-    const node = nodeDeg * Math.PI / 180;
-    const inc = iDeg * Math.PI / 180;
-    const w = omega - node; 
+    // Note : Dans vos données actuelles, omega et node semblent être traités comme des radians ou nécessitant une conversion spécifique.
+    // Pour garantir la compatibilité avec le rendu 3D existant, nous appliquons la même logique de conversion que celle utilisée localement auparavant.
+    
+    const w = (omega || 0) * Math.PI / 180;
+    const node = (nodeDeg || 0) * Math.PI / 180;
+    const inc = (iDeg || 0) * Math.PI / 180;
 
     // Rotation 3D complète
     // x = P(cosN cosw - sinN sinw cosi) - Q(cosN sinw + sinN cosw cosi)

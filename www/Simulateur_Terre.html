@@ -98,7 +98,7 @@
             </details>
 
             <a href="index.html" style="text-decoration:none;"><button id="home-btn" style="background:#3a4a5a; color:#fff; margin-top:10px; width:100%">🏠 Accueil</button></a>
-            <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 8px;">Version 2.5 (28/02/2026)</div>
+            <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 8px;">Version 2.6 (Mars 2026)</div>
         </div>
         <button id="toggle-ui-btn">👁️ Masquer l'interface</button>
     </div>
@@ -127,20 +127,30 @@
         <button id="close-seasons" style="background:#882222; border:1px solid #ff4444; width:100%;">Fermer</button>
     </div>
 
+    <!-- IMPORT MAP : Redirection vers les fichiers locaux -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./js/libs/three.module.js",
+                "three/addons/": "./js/libs/"
+            }
+        }
+    </script>
+
     <!-- Script Principal -->
     <script type="module">
-        import * as THREE from 'https://esm.sh/three@0.160.0';
-        import { OrbitControls } from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/OrbitControls.js';
 
         // --- Configuration ---
         const CONFIG = {
             tilt: 23.5 * (Math.PI / 180), // Conversion en radians
             rotationSpeed: 0.005,
-            // Utilisation de la même source fiable que le simulateur 3D pour la texture
-            textureUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
-            normalUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_normal_2048.jpg',
-            specularUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_specular_2048.jpg',
-            textureUrlNight: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_lights_2048.png',
+            // Textures locales
+            textureUrl: './assets/textures/earth_day.jpg',
+            normalUrl: './assets/textures/earth_normal.jpg',
+            specularUrl: './assets/textures/earth_specular.jpg',
+            textureUrlNight: './assets/textures/earth_night.png',
             sunDistance: 8 // Distance de la lumière pour la visualisation
         };
 

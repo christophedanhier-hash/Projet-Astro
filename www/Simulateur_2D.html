@@ -102,7 +102,7 @@
                 <div class="control-group checkbox-group"><input type="checkbox" id="toggle-kuiper" checked><label for="toggle-kuiper">Ceinture de Kuiper</label></div>
             </div>
             <a href="index.html" style="text-decoration:none;"><button id="home-btn" style="background:#3a4a5a; color:#fff; margin-top:10px; width:100%">🏠 Accueil</button></a>
-            <div class="info-text" style="text-align: center;">Version 2.5 (28/02/2026)</div>
+            <div class="info-text" style="text-align: center;">Version 2.6 (Mars 2026)</div>
         </div>
         <button id="toggle-ui-btn">👁️ Masquer</button>
     </div>
@@ -143,7 +143,7 @@
     <canvas id="solar-system"></canvas>
 
     <script type="module">
-        import { J2000, getOrbitalPosition, PLANETS_DATA } from './astro-logic.js';
+        import { J2000, getOrbitalPosition, solveKepler, PLANETS_DATA } from './astro-logic.js';
 
         const canvas = document.getElementById('solar-system');
         const ctx = canvas.getContext('2d');
@@ -312,44 +312,6 @@
 
         const keplerK = Math.pow(365.25, 2) / Math.pow(130, 3);
         
-        // Fonction pour résoudre l'équation de Kepler (M = E - e sin E)
-        // Cela garantit une position mathématiquement précise sur l'ellipse.
-        function solveKepler(M, e) {
-            let E = M; 
-            // Méthode de Newton-Raphson (5 itérations suffisent pour une haute précision)
-            for (let i = 0; i < 5; i++) {
-                E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
-            }
-            return E; // Retourne l'Anomalie Excentrique
-        }
-
-        // Fonction pour calculer la position 2D exacte (projection sur l'écliptique)
-        // Identique à la 3D pour garantir la cohérence
-        function getKeplerPosition2D(a, e, period, baseAngle, omega, days, node) {
-            const n = (2 * Math.PI) / period;
-            let M = baseAngle + n * days;
-            const E = solveKepler(M, e);
-            
-            // Coordonnées héliocentriques dans le plan orbital
-            const P = a * (Math.cos(E) - e);
-            const Q = a * Math.sqrt(1 - e * e) * Math.sin(E);
-            
-            // Conversion degrés -> radians
-            const w = (omega || 0) * Math.PI / 180;
-            const nodeRad = (node || 0) * Math.PI / 180;
-            
-            // Rotation dans le plan (Argument du périhélie)
-            const x1 = P * Math.cos(w) - Q * Math.sin(w);
-            const y1 = P * Math.sin(w) + Q * Math.cos(w);
-            
-            // Projection sur le plan de l'écliptique (Rotation du noeud ascendant)
-            // On ignore l'inclinaison (i) car on regarde "de dessus" en 2D
-            const x2 = x1 * Math.cos(nodeRad) - y1 * Math.sin(nodeRad);
-            const y2 = x1 * Math.sin(nodeRad) + y1 * Math.cos(nodeRad);
-            
-            return { x: x2, y: y2 };
-        }
-
         const generateBelt = (count, aMin, aVar, eMin, eVar, size, colorBase) => {
             const belt = [];
             for (let i = 0; i < count; i++) {
@@ -517,7 +479,8 @@
 
                 let earthAngle = 0, earthX = 0, earthY = 0;
                 if (planets[3]) {
-                    const pos = getKeplerPosition2D(planets[3].a, planets[3].e, planets[3].period, planets[3].baseAngle, planets[3].omega, daysSinceJ2000, planets[3].node);
+                    // On passe 0 pour l'inclinaison (i) pour avoir une projection 2D parfaite
+                    const pos = getOrbitalPosition(planets[3].a, planets[3].e, planets[3].period, planets[3].baseAngle, planets[3].omega, daysSinceJ2000, 0, planets[3].node);
                     earthX = pos.x; earthY = pos.y;
                     earthAngle = Math.atan2(earthY, earthX);
                 }
@@ -529,14 +492,14 @@
                     p.isVisibleLocal = false;
 
                     if (index > 0) {
-                        const pos = getKeplerPosition2D(p.a, p.e, p.period, p.baseAngle, p.omega, daysSinceJ2000, p.node);
+                        const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, daysSinceJ2000, 0, p.node);
                         x = pos.x; y = pos.y;
 
                         if (showOrbits) {
                             // Dessin de l'orbite complète (échantillonnage pour précision)
                             ctx.beginPath();
                             for(let k=0; k<=128; k++) {
-                                const pt = getKeplerPosition2D(p.a, p.e, p.period, p.baseAngle, p.omega, (k/128)*p.period, p.node);
+                                const pt = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, (k/128)*p.period, 0, p.node);
                                 if (k===0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
                             }
                             ctx.strokeStyle = p.e > 0.9 ? 'rgba(204,238,255,0.4)' : 'rgba(255,255,255,0.4)';

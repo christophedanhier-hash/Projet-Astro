@@ -4,8 +4,9 @@ Bienvenue sur ce planétarium interactif ! Cet outil a été conçu pour explore
 
 ---
 
-## ✨ Nouveautés v2.5 (Février 2026)
+## ✨ Nouveautés v2.6 (Mars 2026)
 
+- **Mode Hors-ligne** : L'application embarque désormais toutes ses données (textures, calculs) pour fonctionner sans réseau.
 - **Exploration Lunaire 3D** : Un tout nouveau module dédié à l'étude de la Lune, de ses phases et des phénomènes de syzygie.
 - **Vue Galactique Réaliste** : Le Système Solaire est désormais positionné avec précision au sein du Bras d'Orion dans la Voie Lactée.
 - **Terre Photoréaliste** : Le module Terre bénéficie désormais de textures HD, de relief, de reflets océaniques, de nuages animés et d'une atmosphère volumétrique.

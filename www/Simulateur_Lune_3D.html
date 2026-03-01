@@ -64,14 +64,24 @@
                 <label for="toggle-markers-cb">Afficher les sites lunaires</label>
             </div>
             <a href="index.html" style="text-decoration:none;"><button id="home-btn" style="background:#3a4a5a; color:#fff; margin-top:10px; width:100%">🏠 Accueil</button></a>
-            <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 8px;">Version 2.5 (28/02/2026)</div>
+            <div style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 8px;">Version 2.6 (Mars 2026)</div>
         </div>
         <button id="toggle-ui-btn">👁️ Masquer l'interface</button>
     </div>
 
+    <!-- IMPORT MAP : Redirection vers les fichiers locaux -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./js/libs/three.module.js",
+                "three/addons/": "./js/libs/"
+            }
+        }
+    </script>
+
     <script type="module">
-        import * as THREE from 'https://esm.sh/three@0.160.0';
-        import { OrbitControls } from 'https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/OrbitControls.js';
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 10000);
@@ -127,7 +137,7 @@
         scene.add(ambientLight);
 
         const textureLoader = new THREE.TextureLoader();
-        const CDN_URL = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/';
+        const TEXTURE_PATH = './assets/textures/';
 
         // --- LA LUNE ---
         const moonGeo = new THREE.SphereGeometry(10, 64, 64);
@@ -140,7 +150,7 @@
         moon.receiveShadow = true;
         scene.add(moon);
 
-        textureLoader.load(CDN_URL + 'moon_1024.jpg', (tex) => {
+        textureLoader.load(TEXTURE_PATH + 'moon.jpg', (tex) => {
             moonMat.map = tex;
             moonMat.bumpMap = tex; // Utilisation de la texture principale comme carte de relief
             moonMat.needsUpdate = true;
@@ -222,7 +232,7 @@
         earth.position.set(-200, 0, -100); // Distance arbitraire pour le visuel
         scene.add(earth);
 
-        textureLoader.load(CDN_URL + 'earth_atmos_2048.jpg', (tex) => {
+        textureLoader.load(TEXTURE_PATH + 'earth_day.jpg', (tex) => {
             earthMat.map = tex;
             earthMat.needsUpdate = true;
         });
