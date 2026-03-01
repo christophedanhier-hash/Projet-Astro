@@ -25,7 +25,7 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
    - **Architecture** : 100% Autonome. Toutes les ressources (textures, librairies Three.js) sont locales dans `www/assets/` et `www/js/libs/`. Utilisation des Import Maps.
    - **Précision** : Moteur mathématique unifié dans `astro-logic.js` utilisant la méthode de Newton-Raphson pour une haute précision orbitale.
    - **Interface (UI)** : Calendrier personnalisé HTML/CSS "cross-platform", bouton "Aujourd'hui", indicateurs de chargement.
-   - **Compatibilité Mobile** : Support complet du tactile (Raycasting corrigé), mode plein écran, optimisation des performances (textures compressées/locales).
+   - **Compatibilité Mobile** : Support complet du tactile. Optimisations Batterie : PixelRatio limité à 2.0, arrêt du rendu en arrière-plan, réduction charge GPU.
    - **Module Terre (v2.6)** : Rendu HD (Textures Diffuse, Normal, Specular), nuages retirés pour voir les tropiques, gestion des saisons et géolocalisation.
    - **Guides** : Numéros de version et guide utilisateur à jour (v2.6).
 

@@ -18,6 +18,7 @@ Architecture :
 - 100% Offline (Pas de CDN).
 - Modules : 2D, 3D, Lune, Terre.
 - Fonctionnalités : Saisons, Phases lunaires, Syzygies, Visibilité locale, Mode Nuit.
+- Performance : Optimisation Batterie (PixelRatio max 2.0, Pause en arrière-plan), LogarithmicDepthBuffer.
 </Project_Context>
 
 <Instructions>
