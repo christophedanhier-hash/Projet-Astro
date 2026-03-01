@@ -21,13 +21,19 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
    - Guide & Observations : Pages d'aide et carnet de notes.
 
 4. ÉTAT ACTUEL :
-   Le projet est en version 2.5 (Mise à jour majeure : Terre HD & Lisibilité).
-   - **Précision** : Les orbites sont calculées via l'équation de Kepler et les dates sont gérées en UTC.
-   - **Interface (UI)** : Un calendrier personnalisé en HTML/CSS a été implémenté pour garantir la compatibilité sur toutes les plateformes. Un bouton "Aujourd'hui" a été ajouté.
-   - **Compatibilité Mobile** : Le clic sur les planètes en 3D a été corrigé pour fonctionner sur les écrans tactiles (Android).
-   - **Module Terre (v2.5)** : Rendu haute définition (Textures Diffuse + Normal + Specular) optimisé pour la lisibilité (nuages retirés pour voir les tropiques), saisons et géolocalisation.
-   - **Accueil & Guide** : Mise à jour des numéros de version et du guide utilisateur pour refléter les nouveautés v2.5.
+   Le projet est en version 2.6 (Mars 2026) - Version "Offline-First".
+   - **Architecture** : 100% Autonome. Toutes les ressources (textures, librairies Three.js) sont locales dans `www/assets/` et `www/js/libs/`. Utilisation des Import Maps.
+   - **Précision** : Moteur mathématique unifié dans `astro-logic.js` utilisant la méthode de Newton-Raphson pour une haute précision orbitale.
+   - **Interface (UI)** : Calendrier personnalisé HTML/CSS "cross-platform", bouton "Aujourd'hui", indicateurs de chargement.
+   - **Compatibilité Mobile** : Support complet du tactile (Raycasting corrigé), mode plein écran, optimisation des performances (textures compressées/locales).
+   - **Module Terre (v2.6)** : Rendu HD (Textures Diffuse, Normal, Specular), nuages retirés pour voir les tropiques, gestion des saisons et géolocalisation.
+   - **Guides** : Numéros de version et guide utilisateur à jour (v2.6).
 
-5. A la reprise refaire un check de l'ensemble du projet "Projet Astro" pour bien comprendre la structure de celui-ci 
+5. FLUX DE TRAVAIL & DÉPLOIEMENT :
+   - **Environnement** : Chromebook (Dev) -> Pixel 8 Pro (Cible).
+   - **Commandes Clés** :
+     - `npx cap sync` : Copie `www/` vers `android/`.
+     - `npx cap run android --target <ID>` : Compile et installe sur le device.
+   - **Débogage** : Utilisation de `chrome://inspect` pour les logs WebView.
 
 J'attends tes instructions pour commencer.
