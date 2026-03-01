@@ -189,7 +189,7 @@
             // 3. Rendu
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.outputColorSpace = THREE.SRGBColorSpace; // Correction couleur comme Simu 3D
             document.body.appendChild(renderer.domElement);
 
