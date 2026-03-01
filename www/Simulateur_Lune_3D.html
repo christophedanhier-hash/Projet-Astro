@@ -89,6 +89,7 @@
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimisation batterie
         renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
@@ -408,6 +409,10 @@
         }
 
         function animate() {
+            if (document.hidden) {
+                setTimeout(animate, 500); // Mode économie d'énergie en arrière-plan
+                return;
+            }
             requestAnimationFrame(animate);
             
             const earthAngle = Date.now() * 0.0001;

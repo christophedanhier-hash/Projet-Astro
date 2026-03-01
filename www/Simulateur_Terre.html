@@ -664,6 +664,10 @@
         }
 
         function animate() {
+            if (document.hidden) {
+                setTimeout(animate, 500); // Mode économie d'énergie
+                return;
+            }
             requestAnimationFrame(animate);
 
             if (isViewAnimating) {
