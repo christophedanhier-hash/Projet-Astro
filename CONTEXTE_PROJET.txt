@@ -21,13 +21,13 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
    - Guide & Observations : Pages d'aide et carnet de notes.
 
 4. ÉTAT ACTUEL :
-   Le projet est en version 2.6 (Mars 2026) - Version "Offline-First".
+   Le projet est en version 3.1 (Mars 2026) - Version "Offline-First".
    - **Architecture** : 100% Autonome. Toutes les ressources (textures, librairies Three.js) sont locales dans `www/assets/` et `www/js/libs/`. Utilisation des Import Maps.
    - **Précision** : Moteur mathématique unifié dans `astro-logic.js` utilisant la méthode de Newton-Raphson pour une haute précision orbitale.
    - **Interface (UI)** : Calendrier personnalisé HTML/CSS "cross-platform", bouton "Aujourd'hui", indicateurs de chargement.
    - **Compatibilité Mobile** : Support complet du tactile. Optimisations Batterie : PixelRatio limité à 2.0, arrêt du rendu en arrière-plan, réduction charge GPU.
-   - **Module Terre (v2.6)** : Rendu HD (Textures Diffuse, Normal, Specular), nuages retirés pour voir les tropiques, gestion des saisons et géolocalisation.
-   - **Guides** : Numéros de version et guide utilisateur à jour (v2.6).
+   - **Module Terre (v3.1)** : Rendu HD (Textures Diffuse, Normal, Specular), nuages retirés pour voir les tropiques, gestion des saisons et géolocalisation.
+   - **Guides** : Numéros de version et guide utilisateur à jour (v3.1).
 
 5. FLUX DE TRAVAIL & DÉPLOIEMENT :
    - **Environnement** : Chromebook (Dev) -> Pixel 8 Pro (Cible).
@@ -35,5 +35,8 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
      - `npx cap sync` : Copie `www/` vers `android/`.
      - `npx cap run android --target <ID>` : Compile et installe sur le device.
    - **Débogage** : Utilisation de `chrome://inspect` pour les logs WebView.
+
+6. Prompt Assistant
+   - **Lecture** : CONTEXT_PROMPT.txt
 
 J'attends tes instructions pour commencer.

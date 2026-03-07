@@ -4,7 +4,7 @@ Bienvenue sur ce planétarium interactif ! Cet outil a été conçu pour explore
 
 ---
 
-## ✨ Nouveautés v2.6 (Mars 2026)
+## ✨ Nouveautés v3.1 (Mars 2026)
 
 - **Mode Hors-ligne** : L'application embarque désormais toutes ses données (textures, calculs) pour fonctionner sans réseau.
 - **Exploration Lunaire 3D** : Un tout nouveau module dédié à l'étude de la Lune, de ses phases et des phénomènes de syzygie.
