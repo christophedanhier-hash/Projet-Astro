@@ -28,6 +28,10 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
    - **Compatibilité Mobile** : Support complet du tactile. Optimisations Batterie : PixelRatio limité à 2.0, arrêt du rendu en arrière-plan, réduction charge GPU.
    - **Module Terre (v3.1)** : Rendu HD (Textures Diffuse, Normal, Specular), nuages retirés pour voir les tropiques, gestion des saisons et géolocalisation.
    - **Guides** : Numéros de version et guide utilisateur à jour (v3.1).
+   - **Améliorations futures (Audit v3.1)** :
+     - Refactoring de l'UI : Les éléments d'interface (calendrier personnalisé, contrôles) sont dupliqués dans les 4 fichiers HTML. Il faut les extraire dans des modules UI partagés (architecture DRY).
+     - Refactoring Three.js : Le code de base (Scène, Caméra, Renderer, Resize, Garbage Collection) est répété. Créer un wrapper/constructeur centralisé (`AstroRenderer.js`).
+     - Séparation des préoccupations : Extraire le CSS global dans `css/main.css` et le comportement JavaScript spécifique de chaque simulateur dans le dossier `js/modules/` (ex: `earth.js`, `moon.js`).
 
 5. FLUX DE TRAVAIL & DÉPLOIEMENT :
    - **Environnement** : Chromebook (Dev) -> Pixel 8 Pro (Cible).
