@@ -141,6 +141,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/OrbitControls.js';
+        import { TextureCache } from './astro-logic.js';
 
         // --- Configuration ---
         const CONFIG = {
@@ -399,6 +400,7 @@
             const geometry = new THREE.SphereGeometry(1, 64, 64);
             const textureLoader = new THREE.TextureLoader();
             textureLoader.setCrossOrigin('anonymous');
+            TextureCache.init(textureLoader); // Init Cache
 
             // Utilisation de MeshPhongMaterial pour mieux gérer la brillance des océans (Specular Map)
             const material = new THREE.MeshPhongMaterial({
@@ -408,20 +410,19 @@
             });
 
             // 1. Texture de couleur (Jour)
-            textureLoader.load(CONFIG.textureUrl, (tex) => {
-                tex.colorSpace = THREE.SRGBColorSpace;
+            TextureCache.get(CONFIG.textureUrl, (tex) => {
                 material.map = tex;
                 material.needsUpdate = true;
             });
 
             // 2. Normal Map (Relief)
-            textureLoader.load(CONFIG.normalUrl, (tex) => {
+            TextureCache.get(CONFIG.normalUrl, (tex) => {
                 material.normalMap = tex;
                 material.normalScale.set(0.85, 0.85);
             });
 
             // 3. Specular Map (Reflets océans)
-            textureLoader.load(CONFIG.specularUrl, (tex) => {
+            TextureCache.get(CONFIG.specularUrl, (tex) => {
                 material.specularMap = tex;
             });
 
@@ -773,6 +774,20 @@
             document.getElementById('custom-calendar').style.display = 'none'; 
             document.getElementById('calendar-overlay').style.display = 'none'; 
         }
+
+        // --- NOUVEAU : GARBAGE COLLECTOR A LA FERMETURE ---
+        window.addEventListener('beforeunload', () => {
+            scene.traverse(child => {
+                if (child.isMesh || child.isPoints || child.isLine) {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                        else child.material.dispose();
+                    }
+                }
+            });
+            renderer.dispose();
+        });
     </script>
 
 </body>

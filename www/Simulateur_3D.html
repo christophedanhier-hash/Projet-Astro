@@ -150,14 +150,14 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/OrbitControls.js';
-        import { J2000, getOrbitalPosition, PLANETS_DATA } from './astro-logic.js';
+        import { J2000, getOrbitalPosition, PLANETS_DATA, TextureCache } from './astro-logic.js';
 
         const scene = new THREE.Scene();
         // Modification majeure : La caméra peut voir jusqu'à 150 000 unités de distance !
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 150000);
         camera.position.set(0, 900, 1800); // Recul de la caméra pour inclure Jupiter/Saturn dans le champ initial
         const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); // logarithmicDepthBuffer empêche le clipping
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimisation batterie : Plafond à 2.0
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Optimisation batterie : Plafond à 1.5
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace; 
         document.body.appendChild(renderer.domElement);
@@ -172,14 +172,17 @@
         const textureLoader = new THREE.TextureLoader();
         textureLoader.setCrossOrigin('anonymous'); 
         
+        // Initialiser le Cache Texture
+        TextureCache.init(textureLoader);
+
         function loadTextureSafely(url, material) {
-            textureLoader.load(url, (texture) => {
-                texture.colorSpace = THREE.SRGBColorSpace;
+            TextureCache.get(url, (texture) => {
                 material.map = texture;
                 material.color.setHex(0xffffff); 
                 material.needsUpdate = true;
             });
         }
+
         
         // --- GESTION DES TEXTURES LOCALES ---
         const TEXTURE_PATH = './assets/textures/';
@@ -716,6 +719,23 @@
         }
 
         window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        
+        // --- NOUVEAU : GARBAGE COLLECTOR A LA FERMETURE ---
+        window.addEventListener('beforeunload', () => {
+            scene.traverse(child => {
+                if (child.isMesh || child.isPoints || child.isLine) {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                        else child.material.dispose();
+                    }
+                }
+            });
+            renderer.dispose();
+            // Optionnel: On ne vide pas le TextureCache ici si on veut que le 2ème chargement reste rapide. 
+            // On s'appuie sur la RAM de la WebView.
+        });
+
         animate();
     </script>
 </body>

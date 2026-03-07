@@ -82,6 +82,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/OrbitControls.js';
+        import { TextureCache } from './astro-logic.js';
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 10000);
@@ -89,7 +90,7 @@
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimisation batterie
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Optimisation batterie
         renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
@@ -138,6 +139,7 @@
         scene.add(ambientLight);
 
         const textureLoader = new THREE.TextureLoader();
+        TextureCache.init(textureLoader); // Init Cache
         const TEXTURE_PATH = './assets/textures/';
 
         // --- LA LUNE ---
@@ -151,7 +153,7 @@
         moon.receiveShadow = true;
         scene.add(moon);
 
-        textureLoader.load(TEXTURE_PATH + 'moon.jpg', (tex) => {
+        TextureCache.get(TEXTURE_PATH + 'moon.jpg', (tex) => {
             moonMat.map = tex;
             moonMat.bumpMap = tex; // Utilisation de la texture principale comme carte de relief
             moonMat.needsUpdate = true;
@@ -233,7 +235,7 @@
         earth.position.set(-200, 0, -100); // Distance arbitraire pour le visuel
         scene.add(earth);
 
-        textureLoader.load(TEXTURE_PATH + 'earth_day.jpg', (tex) => {
+        TextureCache.get(TEXTURE_PATH + 'earth_day.jpg', (tex) => {
             earthMat.map = tex;
             earthMat.needsUpdate = true;
         });
@@ -474,6 +476,20 @@
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(markerGroup.children);
             renderer.domElement.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
+        });
+
+        // --- NOUVEAU : GARBAGE COLLECTOR A LA FERMETURE ---
+        window.addEventListener('beforeunload', () => {
+            scene.traverse(child => {
+                if (child.isMesh || child.isPoints || child.isLine || child.isSprite) {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                        else child.material.dispose();
+                    }
+                }
+            });
+            renderer.dispose();
         });
 
         animate();

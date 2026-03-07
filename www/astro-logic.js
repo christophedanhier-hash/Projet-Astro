@@ -10,6 +10,56 @@ export function solveKepler(M, e) {
     return E;
 }
 
+// ==========================================
+// GESTIONNAIRE DE CACHE GLOBAL POUR TEXTURES
+// ==========================================
+// Permet de stocker les textures déjà chargées en RAM (WebGL)
+// et de les partager instantanément entre tous les modules 3D
+// sans avoir à relire le stockage local du téléphone.
+export const TextureCache = {
+    _cache: new Map(),
+    _loader: null, // Sera initialisé avec un THREE.TextureLoader par le simulateur appelant
+
+    // Initialiser le loader (ex: depuis Simulateur_3D.html)
+    init(threeLoader) {
+        if (!this._loader) this._loader = threeLoader;
+    },
+
+    // Demander une texture
+    get(path, callback) {
+        if (!path) return;
+
+        // 1. Si elle est déjà en RAM, on la renvoie de suite
+        if (this._cache.has(path)) {
+            const tex = this._cache.get(path);
+            if (callback) callback(tex);
+            return tex;
+        }
+
+        // 2. Sinon on la charge, on la met en cache, et on la renvoie
+        if (this._loader) {
+            this._loader.load(
+                path,
+                (texture) => {
+                    texture.colorSpace = "srgb"; // THREE.SRGBColorSpace compatible r160
+                    this._cache.set(path, texture);
+                    if (callback) callback(texture);
+                },
+                undefined,
+                (err) => console.warn("Erreur chargement texture (Cache):", path, err)
+            );
+        } else {
+            console.error("TextureCache: Loader THREE.js non initialisé !");
+        }
+    },
+
+    // Nettoyer manuellement si besoin (ex: on quitte l'application ou l'onglet)
+    disposeAll() {
+        this._cache.forEach(texture => texture.dispose());
+        this._cache.clear();
+    }
+};
+
 export function getOrbitalPosition(a, e, period, baseAngle, omega, daysSinceJ2000, iDeg = 0, nodeDeg = 0) {
     const n = (2 * Math.PI) / period;
     let M = baseAngle + n * daysSinceJ2000;
