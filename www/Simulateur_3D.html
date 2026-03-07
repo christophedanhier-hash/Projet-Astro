@@ -86,6 +86,7 @@
                         <button id="zoom-out-btn">🔍 -</button>
                     </div>
                 </div>
+                <div class="control-group checkbox-group"><input type="checkbox" id="toggle-fps"><label for="toggle-fps">Afficher les FPS</label></div>
                 <div class="control-group">
                     <div class="btn-group">
                         <button id="pause-btn">Mettre en pause</button>
@@ -116,6 +117,9 @@
     </div>
 
     <div id="red-overlay"></div>
+    
+    <!-- Compteur FPS -->
+    <div id="fps-counter" style="display:none; position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.8); color:#00ff00; padding:5px 10px; border-radius:5px; font-family:monospace; font-size:1rem; border:1px solid #00ff00; z-index:100;">60 FPS</div>
 
     <div id="tooltip">
         <h2 id="tt-name" style="margin:0 0 5px 0; font-size:1.1rem;">Planète</h2>
@@ -578,6 +582,10 @@
         document.getElementById('toggle-orbits').addEventListener('change', e => orbitesMeshes.forEach(o => o.visible = e.target.checked));
         document.getElementById('toggle-asteroids').addEventListener('change', e => asteroidBelt.visible = e.target.checked);
         document.getElementById('toggle-kuiper').addEventListener('change', e => kuiperBelt.visible = e.target.checked);
+        document.getElementById('toggle-fps').addEventListener('change', e => { 
+            const fpsElem = document.getElementById('fps-counter');
+            fpsElem.style.display = e.target.checked ? 'block' : 'none';
+        });
         document.getElementById('night-mode-btn').addEventListener('click', e => { const over = document.getElementById('red-overlay'); over.style.display = over.style.display === 'block' ? 'none' : 'block'; });
 
         const targetSelect = document.getElementById('target-select');
@@ -651,12 +659,31 @@
         const vecCible = new THREE.Vector3();
         const vecOrigin = new THREE.Vector3(0, 0, 0); // Vecteur réutilisable pour l'origine
         
+        let lastTime = performance.now();
+        let frameCount = 0;
+        let fpsCounter = document.getElementById('fps-counter');
+        
         function animate() {
             if (document.hidden) {
                 setTimeout(animate, 500); // Mode économie d'énergie en arrière-plan
                 return;
             }
             requestAnimationFrame(animate);
+
+            // Calcul des FPS
+            frameCount++;
+            const now = performance.now();
+            if (now - lastTime >= 1000) {
+                if (fpsCounter.style.display !== 'none') {
+                    fpsCounter.innerText = `${frameCount} FPS`;
+                    if (frameCount < 30) fpsCounter.style.color = '#ff4444';
+                    else if (frameCount < 50) fpsCounter.style.color = '#ffcc00';
+                    else fpsCounter.style.color = '#00ff00';
+                    fpsCounter.style.borderColor = fpsCounter.style.color;
+                }
+                frameCount = 0;
+                lastTime = now;
+            }
 
             if (!isPaused) { simulatedDate.setTime(simulatedDate.getTime() + (speed * 86400000 / 60)); }
             document.getElementById('date-display').innerText = simulatedDate.toLocaleDateString('fr-FR');
