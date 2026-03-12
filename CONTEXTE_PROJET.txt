@@ -27,10 +27,10 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
    Le projet est en version 3.1 (Mars 2026) - Post-audit qualité complet.
    - **Architecture DRY** : CSS et JS partagés extraits dans `css/main.css` et `js/modules/ui-utils.js`. Chaque simulateur n'a plus que ses styles et logiques spécifiques en inline. Réduction significative de la duplication (~400 lignes éliminées).
    - **100% Autonome (Offline-First)** : Toutes les ressources (textures, librairies Three.js) sont locales dans `www/assets/` et `www/js/libs/`. Utilisation des Import Maps.
-   - **Précision astronomique** : Moteur mathématique `astro-logic.js` corrigé :
-     - Solveur de Kepler adaptatif (6 itérations standard, 15 pour e > 0.8).
-     - Conversion omega/nœud corrigée (données en radians, plus de double conversion).
-     - Comète de Halley : période positive (27562 jours), rétrogradation gérée par i=162°.
+   - **Précision astronomique** : Moteur mathématique `astro-logic.js` :
+     - Solveur de Kepler Newton-Raphson (E=M, 5 itérations). NE PAS modifier le point de départ ni le nombre d'itérations.
+     - Données orbitales omega, node et inclinaison en DEGRÉS dans PLANETS_DATA. La conversion deg→rad est faite dans `getOrbitalPosition`. NE PAS supprimer cette conversion.
+     - Comète de Halley : période NÉGATIVE (-27562 jours) pour orbite rétrograde + i=162°. NE PAS passer en positif.
    - **Interface (UI)** : Calendrier personnalisé HTML/CSS "cross-platform" (module partagé), bouton "Aujourd'hui", indicateurs de chargement.
    - **Performance & Robustesse** :
      - PixelRatio limité à 1.5, arrêt du rendu en arrière-plan.
