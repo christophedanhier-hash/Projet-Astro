@@ -4,58 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Système Solaire 3D & Voie Lactée</title>
+    <link rel="stylesheet" href="css/main.css">
     <style>
-        html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#020205;font-family:sans-serif;color:#fff;touch-action:none;color-scheme:dark}
-        #ui-container{position:absolute;top:10px;left:10px;background:rgba(10,15,30,.85);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);z-index:10;backdrop-filter:blur(4px);max-width:240px;max-height:85vh;overflow-y:auto}
-        h1{margin:0 0 10px;font-size:1rem;color:#4da8da;text-transform:uppercase}
-        .control-group{margin-bottom:10px;display:flex;flex-direction:column;gap:5px}
-        .checkbox-group{flex-direction:row;align-items:center;cursor:pointer;font-size:.9rem}
-        .btn-group{display:flex;gap:5px}
-        input[type=range]{width:100%;cursor:pointer}
-        input[type=date], select{background:#1a2535;color:#ffffff;border:1px solid rgba(77,168,218,0.5);padding:5px;border-radius:5px;font-family:inherit;width:100%;outline:none;cursor:pointer;color-scheme:dark;}
-        button{background:#4da8da;color:#050510;border:none;padding:6px;border-radius:5px;cursor:pointer;font-weight:bold;flex:1; transition: 0.3s;}
-        button:hover{background:#79c2ea}
-        #toggle-ui-btn{background:#3a4a5a;color:#fff;margin-top:5px;width:100%}
-        
         #galaxy-btn{background: linear-gradient(45deg, #2a0845, #6441A5); color:#fff; margin-bottom:10px; width:100%; border: 1px solid #8b4dda; box-shadow: 0 0 10px rgba(100,65,165,0.5);}
         #galaxy-btn:hover { background: linear-gradient(45deg, #6441A5, #8b4dda); box-shadow: 0 0 15px rgba(139,77,218,0.8); }
-        
         #night-mode-btn{background:#882222;color:#fff;border:1px solid #ff4444; width: 100%;}
-        
-        #tooltip{position:absolute;background:rgba(0,0,0,.9);border:1px solid #4da8da;padding:10px;border-radius:8px;pointer-events:none;opacity:0;z-index:20;transition: opacity 0.1s;}
-        #tooltip .value{color:#4da8da;font-weight:bold}
-        #red-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,0,0,.7);mix-blend-mode:multiply;pointer-events:none;z-index:9998}
-
-        #info-panel {
-            position: absolute; bottom: -100%; left: 50%; transform: translateX(-50%);
-            background: rgba(10, 15, 30, 0.92); padding: 20px;
-            border-radius: 15px 15px 0 0; border: 1px solid rgba(77,168,218,0.4); border-bottom: none;
-            z-index: 15; backdrop-filter: blur(8px); color: white; width: 90%; max-width: 450px;
-            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-        }
-        #info-panel.active { bottom: 0; }
-        #info-panel h2 { margin: 0 0 15px 0; font-size: 1.4rem; letter-spacing: 1px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem; text-align: left;}
-        .info-grid div { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-        .info-grid span { color: #4da8da; font-weight: bold; display: block; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 3px;}
-        #close-info { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-weight: bold; font-size: 1.2rem; transition: 0.2s; }
-        #close-info:hover { color: white; transform: scale(1.1); }
-        
-        canvas{display:block;width:100%;height:100%}
-
-        /* --- CALENDRIER PERSONNALISÉ --- */
-        #calendar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; }
-        #custom-calendar { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a2535; border: 1px solid #4da8da; border-radius: 10px; padding: 15px; z-index: 1000; width: 280px; box-shadow: 0 0 25px rgba(0,0,0,0.8); font-family: sans-serif; }
-        #custom-calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        #custom-calendar-header button { background: #3a4a5a; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 5px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        #custom-calendar-header button:hover { background: #4da8da; color: #000; }
-        #custom-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-        .calendar-day-header { font-weight: bold; color: #4da8da; font-size: 0.8rem; padding-bottom: 5px; }
-        .calendar-day { padding: 8px 0; cursor: pointer; border-radius: 4px; color: #ddd; font-size: 0.9rem; }
-        .calendar-day:hover { background: #3a4a5a; color: #fff; }
-        .calendar-day.selected { background: #4da8da; color: #050510; font-weight: bold; box-shadow: 0 0 10px rgba(77,168,218,0.4); }
-        .calendar-day.empty { cursor: default; background: transparent; }
     </style>
 </head>
 <body>
@@ -155,6 +108,7 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/OrbitControls.js';
         import { J2000, getOrbitalPosition, PLANETS_DATA, TextureCache } from './astro-logic.js';
+        import { initCalendar, initToggleUI, initCameraZoom, initGarbageCollector, initWebGLContextHandling, createStarField, MS_PER_DAY } from './js/modules/ui-utils.js';
 
         const scene = new THREE.Scene();
         // Modification majeure : La caméra peut voir jusqu'à 150 000 unités de distance !
@@ -284,21 +238,7 @@
         galaxyGroup.add(orionLabel);
 
         // --- AJOUT DU FOND ÉTOILÉ (Comme en 2D) ---
-        const starGeometry = new THREE.BufferGeometry();
-        const starPositions = [];
-        for (let i = 0; i < 5000; i++) {
-            const r = 90000; // Rayon très large pour entourer tout le système et la galaxie
-            const theta = 2 * Math.PI * Math.random();
-            const phi = Math.acos(2 * Math.random() - 1);
-            starPositions.push(
-                r * Math.sin(phi) * Math.cos(theta),
-                r * Math.sin(phi) * Math.sin(theta),
-                r * Math.cos(phi)
-            );
-        }
-        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-        const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 1.5, sizeAttenuation: false, transparent: true, opacity: 0.6 });
-        scene.add(new THREE.Points(starGeometry, starMaterial));
+        scene.add(createStarField(THREE, 5000, 90000, 1.5, false));
 
         // --- GRILLE ÉCLIPTIQUE ---
         const eclipticGrid = new THREE.GridHelper(3000, 20, 0x4da8da, 0x1a2535);
@@ -499,59 +439,24 @@
             galaxyBtn.innerText = (targetGalaxyOpacity === 1) ? "🌌 Masquer la Galaxie" : "🌌 Révéler la Galaxie";
         });
 
-        const toggleUiBtn = document.getElementById('toggle-ui-btn');
-        const uiContent = document.getElementById('ui-content');
-        toggleUiBtn.addEventListener('click', () => {
-            if (uiContent.style.display === 'none') {
-                uiContent.style.display = 'block'; toggleUiBtn.innerText = "👁️ Masquer l'interface";
-            } else {
-                uiContent.style.display = 'none'; toggleUiBtn.innerText = "👁️ Afficher les contrôles";
-            }
-        });
+        initToggleUI();
 
         // --- LOGIQUE DU CALENDRIER CUSTOM ---
         const dateInput = document.getElementById('date-input');
-        let calDate = new Date(simulatedDate); // Date affichée dans le calendrier (navigation)
 
         function updateDateInputDisplay() {
             dateInput.value = simulatedDate.toISOString().split('T')[0];
         }
         updateDateInputDisplay();
 
-        function renderCalendar() {
-            const grid = document.getElementById('custom-calendar-grid'); grid.innerHTML = '';
-            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-            const daysShort = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-            
-            document.getElementById('cal-month-year').innerText = `${monthNames[calDate.getUTCMonth()]} ${calDate.getUTCFullYear()}`;
-            daysShort.forEach(d => { const div = document.createElement('div'); div.className = 'calendar-day-header'; div.innerText = d; grid.appendChild(div); });
-
-            const firstDay = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth(), 1));
-            const lastDay = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth() + 1, 0));
-            
-            for(let i=0; i<firstDay.getUTCDay(); i++) { const div = document.createElement('div'); div.className = 'calendar-day empty'; grid.appendChild(div); }
-
-            for(let i=1; i<=lastDay.getUTCDate(); i++) {
-                const div = document.createElement('div'); div.className = 'calendar-day'; div.innerText = i;
-                if (i === simulatedDate.getUTCDate() && calDate.getUTCMonth() === simulatedDate.getUTCMonth() && calDate.getUTCFullYear() === simulatedDate.getUTCFullYear()) div.classList.add('selected');
-                div.onclick = () => {
-                    simulatedDate = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth(), i, 12, 0, 0));
-                    updateDateInputDisplay();
-                    planets.forEach(p => { p.history = []; }); // Reset trails
-                    closeCalendar();
-                };
-                grid.appendChild(div);
+        initCalendar({
+            getSimulatedDate: () => simulatedDate,
+            setSimulatedDate: (d) => { simulatedDate = d; },
+            onDateChange: () => {
+                updateDateInputDisplay();
+                planets.forEach(p => { p.history = []; });
             }
-        }
-
-        function openCalendar() { calDate = new Date(simulatedDate); renderCalendar(); document.getElementById('custom-calendar').style.display = 'block'; document.getElementById('calendar-overlay').style.display = 'block'; }
-        function closeCalendar() { document.getElementById('custom-calendar').style.display = 'none'; document.getElementById('calendar-overlay').style.display = 'none'; }
-
-        document.getElementById('date-input').addEventListener('click', openCalendar);
-        document.getElementById('cal-prev').onclick = () => { calDate.setUTCMonth(calDate.getUTCMonth() - 1); renderCalendar(); };
-        document.getElementById('cal-next').onclick = () => { calDate.setUTCMonth(calDate.getUTCMonth() + 1); renderCalendar(); };
-        document.getElementById('cal-close').onclick = closeCalendar;
-        document.getElementById('calendar-overlay').onclick = closeCalendar;
+        });
 
         document.getElementById('today-btn').addEventListener('click', () => {
             const now = new Date();
@@ -564,18 +469,7 @@
         let speed = 1, isPaused = false;
         document.getElementById('speed-slider').addEventListener('input', e => { speed = parseFloat(e.target.value); document.getElementById('speed-display').innerText = speed + " j/sec"; });
         
-        document.getElementById('zoom-in-btn').addEventListener('click', () => {
-            const dist = camera.position.distanceTo(controls.target);
-            const newDist = dist / 1.3;
-            const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
-            camera.position.copy(controls.target).addScaledVector(direction, newDist);
-        });
-        document.getElementById('zoom-out-btn').addEventListener('click', () => {
-            const dist = camera.position.distanceTo(controls.target);
-            const newDist = dist * 1.3;
-            const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
-            camera.position.copy(controls.target).addScaledVector(direction, Math.min(newDist, controls.maxDistance));
-        });
+        initCameraZoom(THREE, camera, controls);
 
         document.getElementById('pause-btn').addEventListener('click', e => { isPaused = !isPaused; e.target.innerText = isPaused ? "Reprendre" : "Mettre en pause"; });
         document.getElementById('toggle-ecliptic').addEventListener('change', e => eclipticGrid.visible = e.target.checked);
@@ -663,6 +557,9 @@
         let frameCount = 0;
         let fpsCounter = document.getElementById('fps-counter');
         
+        const _posTerre = new THREE.Vector3();
+        const _geoVec = new THREE.Vector3();
+
         function animate() {
             if (document.hidden) {
                 setTimeout(animate, 500); // Mode économie d'énergie en arrière-plan
@@ -685,18 +582,20 @@
                 lastTime = now;
             }
 
-            if (!isPaused) { simulatedDate.setTime(simulatedDate.getTime() + (speed * 86400000 / 60)); }
-            document.getElementById('date-display').innerText = simulatedDate.toLocaleDateString('fr-FR');
+            if (!isPaused) {
+                simulatedDate.setTime(simulatedDate.getTime() + (speed * MS_PER_DAY / 60));
+                document.getElementById('date-display').innerText = simulatedDate.toLocaleDateString('fr-FR');
+            }
             
-            const daysSinceJ2000 = (simulatedDate - J2000) / 86400000;
+            const daysSinceJ2000 = (simulatedDate - J2000) / MS_PER_DAY;
             const gmst = 280.46061837 + 360.98564736629 * daysSinceJ2000;
             const lstRad = ((gmst + obsLon) % 360) * Math.PI / 180;
-            let posTerre = new THREE.Vector3();
+            _posTerre.set(0, 0, 0);
 
             planets.forEach((p, i) => {
                 if (i > 0) {
                     const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, daysSinceJ2000, p.i, p.node);
-                    p.groupRef.position.set(pos.x, pos.z, pos.y); p.meshRef.rotation.y += 0.01; if (i === 3) posTerre.set(pos.x, pos.z, pos.y); 
+                    p.groupRef.position.set(pos.x, pos.z, pos.y); p.meshRef.rotation.y += 0.01; if (i === 3) _posTerre.set(pos.x, pos.z, pos.y);
                     
                     // Mise à jour de l'historique et de la traînée
                     if (!isPaused) {
@@ -711,7 +610,7 @@
 
             planets.forEach((p, i) => {
                 if (i !== 3 && p.groupRef) {
-                    let geoVec = p.groupRef.position.clone().sub(posTerre); let lambda = Math.atan2(geoVec.z, geoVec.x); 
+                    let geoVec = _geoVec.copy(p.groupRef.position).sub(_posTerre); let lambda = Math.atan2(geoVec.z, geoVec.x);
                     let eps = 23.44 * Math.PI / 180; let dec = Math.asin(Math.sin(lambda) * Math.sin(eps)); let ra = Math.atan2(Math.sin(lambda) * Math.cos(eps), Math.cos(lambda));
                     let ha = lstRad - ra; let sinAlt = Math.sin(obsLat) * Math.sin(dec) + Math.cos(obsLat) * Math.cos(dec) * Math.cos(ha);
                     p.isVisibleLocal = sinAlt > 0;
@@ -748,20 +647,8 @@
         window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         
         // --- NOUVEAU : GARBAGE COLLECTOR A LA FERMETURE ---
-        window.addEventListener('beforeunload', () => {
-            scene.traverse(child => {
-                if (child.isMesh || child.isPoints || child.isLine) {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-                        else child.material.dispose();
-                    }
-                }
-            });
-            renderer.dispose();
-            // Optionnel: On ne vide pas le TextureCache ici si on veut que le 2ème chargement reste rapide. 
-            // On s'appuie sur la RAM de la WebView.
-        });
+        initGarbageCollector(scene, renderer);
+        initWebGLContextHandling(renderer, animate);
 
         animate();
     </script>

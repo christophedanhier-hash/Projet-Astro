@@ -4,55 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Système Solaire & Voie Lactée</title>
+    <link rel="stylesheet" href="css/main.css">
     <style>
-        html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#020205;font-family:sans-serif;color:#fff;touch-action:none;color-scheme:dark}
-        #ui-container{position:absolute;top:10px;left:10px;background:rgba(10,15,30,.85);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);z-index:10;backdrop-filter:blur(4px);max-width:240px;max-height:85vh;overflow-y:auto}
-        h1{margin:0 0 10px;font-size:1rem;color:#4da8da;text-transform:uppercase}
-        .control-group{margin-bottom:10px;display:flex;flex-direction:column;gap:5px}
-        .checkbox-group{flex-direction:row;align-items:center;cursor:pointer;font-size:.9rem}
-        .btn-group{display:flex;gap:5px}
-        input[type=range]{width:100%;cursor:pointer}
-        input[type=date], select{background:#1a2535;color:#ffffff;border:1px solid rgba(77,168,218,0.5);padding:5px;border-radius:5px;font-family:inherit;width:100%;outline:none;cursor:pointer;color-scheme:dark;}
-        button{background:#4da8da;color:#050510;border:none;padding:6px;border-radius:5px;cursor:pointer;font-weight:bold;flex:1}
-        button:hover{background:#79c2ea}
-        #toggle-ui-btn{background:#3a4a5a;color:#fff;margin-top:5px;width:100%}
+        #solar-system { touch-action: none; }
         #galaxy-btn{background:#8b4dda;color:#fff;margin-bottom:10px;width:100%}
         #night-mode-btn{background:#882222;color:#fff;border:1px solid #ff4444; width: 100%;}
-        #tooltip{position:absolute;background:rgba(0,0,0,.9);border:1px solid #4da8da;padding:10px;border-radius:8px;pointer-events:none;opacity:0;z-index:20;transition: opacity 0.1s;}
-        #tooltip .value,.highlight{color:#4da8da;font-weight:bold}
-        canvas{display:block;width:100%;height:100%}
-        #solar-system { touch-action: none; }
-        #red-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,0,0,.7);mix-blend-mode:multiply;pointer-events:none;z-index:9998}
-
-        /* Styles du Panneau d'Information */
-        #info-panel {
-            position: absolute; bottom: -100%; left: 50%; transform: translateX(-50%);
-            background: rgba(10, 15, 30, 0.92); padding: 20px;
-            border-radius: 15px 15px 0 0; border: 1px solid rgba(77,168,218,0.4); border-bottom: none;
-            z-index: 15; backdrop-filter: blur(8px); color: white; width: 90%; max-width: 450px;
-            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-        }
-        #info-panel.active { bottom: 0; }
-        #info-panel h2 { margin: 0 0 15px 0; font-size: 1.4rem; letter-spacing: 1px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem; text-align: left;}
-        .info-grid div { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-        .info-grid span { color: #4da8da; font-weight: bold; display: block; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 3px;}
-        #close-info { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-weight: bold; font-size: 1.2rem; transition: 0.2s; }
-        #close-info:hover { color: white; transform: scale(1.1); }
-
-        /* --- CALENDRIER PERSONNALISÉ --- */
-        #calendar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; }
-        #custom-calendar { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a2535; border: 1px solid #4da8da; border-radius: 10px; padding: 15px; z-index: 1000; width: 280px; box-shadow: 0 0 25px rgba(0,0,0,0.8); font-family: sans-serif; }
-        #custom-calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        #custom-calendar-header button { background: #3a4a5a; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 5px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        #custom-calendar-header button:hover { background: #4da8da; color: #000; }
-        #custom-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-        .calendar-day-header { font-weight: bold; color: #4da8da; font-size: 0.8rem; padding-bottom: 5px; }
-        .calendar-day { padding: 8px 0; cursor: pointer; border-radius: 4px; color: #ddd; font-size: 0.9rem; }
-        .calendar-day:hover { background: #3a4a5a; color: #fff; }
-        .calendar-day.selected { background: #4da8da; color: #050510; font-weight: bold; box-shadow: 0 0 10px rgba(77,168,218,0.4); }
-        .calendar-day.empty { cursor: default; background: transparent; }
     </style>
 </head>
 <body>
@@ -143,6 +99,7 @@
 
     <script type="module">
         import { J2000, getOrbitalPosition, solveKepler, PLANETS_DATA } from './astro-logic.js';
+        import { initCalendar, initToggleUI, MS_PER_DAY } from './js/modules/ui-utils.js';
 
         const canvas = document.getElementById('solar-system');
         const ctx = canvas.getContext('2d');
@@ -165,42 +122,14 @@
         updateDateInputDisplay();
 
         // --- LOGIQUE DU CALENDRIER CUSTOM ---
-        let calDate = new Date(simulatedDate);
-
-        function renderCalendar() {
-            const grid = document.getElementById('custom-calendar-grid'); grid.innerHTML = '';
-            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-            const daysShort = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-            
-            document.getElementById('cal-month-year').innerText = `${monthNames[calDate.getUTCMonth()]} ${calDate.getUTCFullYear()}`;
-            daysShort.forEach(d => { const div = document.createElement('div'); div.className = 'calendar-day-header'; div.innerText = d; grid.appendChild(div); });
-
-            const firstDay = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth(), 1));
-            const lastDay = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth() + 1, 0));
-            
-            for(let i=0; i<firstDay.getUTCDay(); i++) { const div = document.createElement('div'); div.className = 'calendar-day empty'; grid.appendChild(div); }
-
-            for(let i=1; i<=lastDay.getUTCDate(); i++) {
-                const div = document.createElement('div'); div.className = 'calendar-day'; div.innerText = i;
-                if (i === simulatedDate.getUTCDate() && calDate.getUTCMonth() === simulatedDate.getUTCMonth() && calDate.getUTCFullYear() === simulatedDate.getUTCFullYear()) div.classList.add('selected');
-                div.onclick = () => {
-                    simulatedDate = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth(), i, 12, 0, 0));
-                    updateDateInputDisplay();
-                    planets.forEach(p => { p.history = []; if(p.moons) p.moons.forEach(m => m.history = []) });
-                    closeCalendar();
-                };
-                grid.appendChild(div);
+        initCalendar({
+            getSimulatedDate: () => simulatedDate,
+            setSimulatedDate: (d) => { simulatedDate = d; },
+            onDateChange: () => {
+                updateDateInputDisplay();
+                planets.forEach(p => { p.history = []; if(p.moons) p.moons.forEach(m => m.history = []) });
             }
-        }
-
-        function openCalendar() { calDate = new Date(simulatedDate); renderCalendar(); document.getElementById('custom-calendar').style.display = 'block'; document.getElementById('calendar-overlay').style.display = 'block'; }
-        function closeCalendar() { document.getElementById('custom-calendar').style.display = 'none'; document.getElementById('calendar-overlay').style.display = 'none'; }
-
-        document.getElementById('date-input').addEventListener('click', openCalendar);
-        document.getElementById('cal-prev').onclick = () => { calDate.setUTCMonth(calDate.getUTCMonth() - 1); renderCalendar(); };
-        document.getElementById('cal-next').onclick = () => { calDate.setUTCMonth(calDate.getUTCMonth() + 1); renderCalendar(); };
-        document.getElementById('cal-close').onclick = closeCalendar;
-        document.getElementById('calendar-overlay').onclick = closeCalendar;
+        });
 
         document.getElementById('today-btn').addEventListener('click', () => {
             const now = new Date();
@@ -216,11 +145,7 @@
             e.target.style.background = isNightMode ? '#ff4444' : '#882222';
         });
 
-        document.getElementById('toggle-ui-btn').addEventListener('click', (e) => {
-            const ui = document.getElementById('ui-content');
-            ui.style.display = ui.style.display === 'none' ? 'block' : 'none';
-            e.target.innerText = ui.style.display === 'none' ? '⚙️ Afficher' : '👁️ Masquer';
-        });
+        initToggleUI();
 
         let isGalacticView = false;
         document.getElementById('galaxy-btn').addEventListener('click', (e) => {
@@ -251,6 +176,17 @@
             isVisibleLocal: false,
             moons: p.moons ? p.moons.map(m => ({ ...m, history: [] })) : null
         }));
+
+        // Cache des orbites (ellipses statiques calculées une seule fois)
+        const orbitPaths = planets.map((p, i) => {
+            if (i === 0) return null;
+            const path = [];
+            for (let k = 0; k <= 128; k++) {
+                const pt = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, (k/128)*p.period, 0, p.node);
+                path.push(pt);
+            }
+            return path;
+        });
 
         const targetSelect = document.getElementById('target-select');
         planets.forEach((p, i) => {
@@ -409,11 +345,11 @@
             ctx.save(); ctx.translate(width / 2, height / 2);
 
             if (!isPaused) {
-                simulatedDate.setTime(simulatedDate.getTime() + (baseSpeedMultiplier * 86400000 / 60));
+                simulatedDate.setTime(simulatedDate.getTime() + (baseSpeedMultiplier * MS_PER_DAY / 60));
                 dateDisplay.innerText = simulatedDate.toLocaleDateString('fr-FR');
             }
             
-            let daysSinceJ2000 = (simulatedDate - J2000) / 86400000;
+            let daysSinceJ2000 = (simulatedDate - J2000) / MS_PER_DAY;
             let gmst = 280.46061837 + 360.98564736629 * daysSinceJ2000;
             let lst = (gmst + obsLon) % 360; 
             let lstRad = lst * Math.PI / 180;
@@ -499,15 +435,13 @@
                         const pos = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, daysSinceJ2000, 0, p.node);
                         x = pos.x; y = pos.y;
 
-                        if (showOrbits) {
-                            // Dessin de l'orbite complète (échantillonnage pour précision)
+                        if (showOrbits && orbitPaths[index]) {
                             ctx.beginPath();
-                            for(let k=0; k<=128; k++) {
-                                const pt = getOrbitalPosition(p.a, p.e, p.period, p.baseAngle, p.omega, (k/128)*p.period, 0, p.node);
-                                if (k===0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
-                            }
+                            orbitPaths[index].forEach((pt, k) => {
+                                if (k === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+                            });
                             ctx.strokeStyle = p.e > 0.9 ? 'rgba(204,238,255,0.4)' : 'rgba(255,255,255,0.4)';
-                            ctx.setLineDash([4, 6]); ctx.lineWidth = 1.5/zoomLevel; ctx.stroke(); ctx.setLineDash([]); 
+                            ctx.setLineDash([4, 6]); ctx.lineWidth = 1.5/zoomLevel; ctx.stroke(); ctx.setLineDash([]);
                         }
 
                         if (!isPaused) {

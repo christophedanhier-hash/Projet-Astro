@@ -4,40 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Projet Astro - Saisons & Terre</title>
+    <link rel="stylesheet" href="css/main.css">
     <style>
-        html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#020205;font-family:sans-serif;color:#fff;touch-action:none;color-scheme:dark}
-        
-        /* UI Container (Style identique au Simu 3D) */
-        #ui-container{position:absolute;top:10px;left:10px;background:rgba(10,15,30,.85);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);z-index:10;backdrop-filter:blur(4px);max-width:240px;max-height:85vh;overflow-y:auto}
-        h1{margin:0 0 10px;font-size:1rem;color:#4da8da;text-transform:uppercase}
-        .control-group{margin-bottom:10px;display:flex;flex-direction:column;gap:5px}
-        .checkbox-group{flex-direction:row;align-items:center;cursor:pointer;font-size:.9rem}
-        .btn-group{display:flex;gap:5px}
-        input[type=range]{width:100%;cursor:pointer}
-        input[type=date], select{background:#1a2535;color:#ffffff;border:1px solid rgba(77,168,218,0.5);padding:5px;border-radius:5px;font-family:inherit;width:100%;outline:none;cursor:pointer;color-scheme:dark;}
-        button{background:#4da8da;color:#050510;border:none;padding:6px;border-radius:5px;cursor:pointer;font-weight:bold;flex:1; transition: 0.3s;}
-        button:hover{background:#79c2ea}
-        #toggle-ui-btn{background:#3a4a5a;color:#fff;margin-top:5px;width:100%}
-        
-        /* Info Box spécifique Terre */
-        .info-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; font-size: 0.85rem; line-height: 1.4; border: 1px solid rgba(77,168,218,0.2); margin-bottom: 10px; }
-        .highlight { color: #4da8da; font-weight: bold; }
+        /* Styles spécifiques Simulateur Terre */
+        .info-box { margin-bottom: 10px; }
         .season-text { color: #ffcc00; font-weight: bold; font-size: 1rem; margin-top: 5px; display: block; text-align: center; }
-
-        /* Calendrier Personnalisé */
-        #calendar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; }
-        #custom-calendar { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a2535; border: 1px solid #4da8da; border-radius: 10px; padding: 15px; z-index: 1000; width: 280px; box-shadow: 0 0 25px rgba(0,0,0,0.8); font-family: sans-serif; }
-        #custom-calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        #custom-calendar-header button { background: #3a4a5a; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 5px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        #custom-calendar-header button:hover { background: #4da8da; color: #000; }
-        #custom-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-        .calendar-day-header { font-weight: bold; color: #4da8da; font-size: 0.8rem; padding-bottom: 5px; }
-        .calendar-day { padding: 8px 0; cursor: pointer; border-radius: 4px; color: #ddd; font-size: 0.9rem; }
-        .calendar-day:hover { background: #3a4a5a; color: #fff; }
-        .calendar-day.selected { background: #4da8da; color: #050510; font-weight: bold; box-shadow: 0 0 10px rgba(77,168,218,0.4); }
-        .calendar-day.empty { cursor: default; background: transparent; }
-
-        canvas{display:block;width:100%;height:100%}
     </style>
 </head>
 <body>
@@ -142,6 +113,7 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/OrbitControls.js';
         import { TextureCache } from './astro-logic.js';
+        import { initCalendar, initToggleUI, initCameraZoom, initGarbageCollector, initWebGLContextHandling, createStarField, MS_PER_DAY } from './js/modules/ui-utils.js';
 
         // --- Configuration ---
         const CONFIG = {
@@ -157,7 +129,7 @@
 
         // --- Variables Globales ---
         let scene, camera, renderer, controls;
-        let earthMesh, cloudMesh, earthGroup, sunLight;
+        let earthMesh, earthGroup, sunLight;
         let axisHelper, markersGroup, labelsGroup, orbitGroup, terminatorLine, userMarker, gridGroup;
 
         // --- Variables Temporelles ---
@@ -190,7 +162,7 @@
             // 3. Rendu
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
             renderer.outputColorSpace = THREE.SRGBColorSpace; // Correction couleur comme Simu 3D
             document.body.appendChild(renderer.domElement);
 
@@ -254,18 +226,7 @@
             resetTiltBtn.addEventListener('click', () => { tiltSlider.value = 23.5; updateTilt(23.5); });
 
             // Boutons Zoom
-            document.getElementById('zoom-in-btn').addEventListener('click', () => {
-                const dist = camera.position.distanceTo(controls.target);
-                const newDist = dist / 1.3;
-                const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
-                camera.position.copy(controls.target).addScaledVector(direction, Math.max(newDist, controls.minDistance));
-            });
-            document.getElementById('zoom-out-btn').addEventListener('click', () => {
-                const dist = camera.position.distanceTo(controls.target);
-                const newDist = dist * 1.3;
-                const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
-                camera.position.copy(controls.target).addScaledVector(direction, Math.min(newDist, controls.maxDistance));
-            });
+            initCameraZoom(THREE, camera, controls);
             
             // Bouton Animation Vue
             document.getElementById('anim-view-btn').addEventListener('click', () => {
@@ -289,10 +250,10 @@
                         createLocationMarker(lat, lon);
                         alert(`Position marquée : ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`);
                     }, (err) => {
-                        alert("Erreur : " + err.message);
+                        console.warn("Géolocalisation : " + err.message);
                     });
                 } else {
-                    alert("Géolocalisation non supportée.");
+                    console.warn("Géolocalisation non supportée.");
                 }
             });
             
@@ -317,15 +278,11 @@
             document.getElementById('texture-btn').addEventListener('click', (e) => {
                 isNightTexture = !isNightTexture;
                 const btn = e.target;
-                const loader = new THREE.TextureLoader();
-                loader.setCrossOrigin('anonymous');
-                
                 if (isNightTexture) {
                     btn.innerText = "☀️ Jour";
                     btn.style.background = "#f1c40f";
                     btn.style.color = "#000";
-                    loader.load(CONFIG.textureUrlNight, (tex) => {
-                        tex.colorSpace = THREE.SRGBColorSpace;
+                    TextureCache.get(CONFIG.textureUrlNight, (tex) => {
                         earthMesh.material.map = tex;
                         earthMesh.material.needsUpdate = true;
                     });
@@ -333,8 +290,7 @@
                     btn.innerText = "🌃 Nuit";
                     btn.style.background = "#2c3e50";
                     btn.style.color = "#fff";
-                    loader.load(CONFIG.textureUrl, (tex) => {
-                        tex.colorSpace = THREE.SRGBColorSpace;
+                    TextureCache.get(CONFIG.textureUrl, (tex) => {
                         earthMesh.material.map = tex;
                         earthMesh.material.needsUpdate = true;
                     });
@@ -373,18 +329,20 @@
             document.getElementById('toggle-grid').addEventListener('change', (e) => { if(gridGroup) gridGroup.visible = e.target.checked; });
 
             // Toggle UI
-            const toggleUiBtn = document.getElementById('toggle-ui-btn');
-            const uiContent = document.getElementById('ui-content');
-            toggleUiBtn.addEventListener('click', () => {
-                if (uiContent.style.display === 'none') {
-                    uiContent.style.display = 'block'; toggleUiBtn.innerText = "👁️ Masquer l'interface";
-                } else {
-                    uiContent.style.display = 'none'; toggleUiBtn.innerText = "👁️ Afficher les contrôles";
-                }
-            });
+            initToggleUI();
 
             // Initialisation du Calendrier
-            initCalendar();
+            initCalendar({
+                getSimulatedDate: () => simulatedDate,
+                setSimulatedDate: (d) => { simulatedDate = d; },
+                onDateChange: () => { updateDateDisplay(); }
+            });
+
+            // Bouton Aujourd'hui
+            document.getElementById('today-btn').addEventListener('click', () => {
+                simulatedDate = new Date();
+                updateDateDisplay();
+            });
         }
 
         function createEarth() {
@@ -399,7 +357,6 @@
             // Géométrie et Matériau
             const geometry = new THREE.SphereGeometry(1, 64, 64);
             const textureLoader = new THREE.TextureLoader();
-            textureLoader.setCrossOrigin('anonymous');
             TextureCache.init(textureLoader); // Init Cache
 
             // Utilisation de MeshPhongMaterial pour mieux gérer la brillance des océans (Specular Map)
@@ -449,16 +406,7 @@
         }
 
         function createStars() {
-            const starGeo = new THREE.BufferGeometry();
-            const starPos = [];
-            for(let i=0; i<2000; i++) {
-                const r = 50; // Loin derrière
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos(2 * Math.random() - 1);
-                starPos.push(r*Math.sin(phi)*Math.cos(theta), r*Math.sin(phi)*Math.sin(theta), r*Math.cos(phi));
-            }
-            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-            scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.1})));
+            scene.add(createStarField(THREE, 2000, 50, 0.1));
         }
 
         function onWindowResize() {
@@ -619,7 +567,7 @@
         function getSunPosition(date) {
             // Calcul simplifié de la position du Soleil sur l'écliptique
             const start = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
-            const days = (date - start) / 86400000;
+            const days = (date - start) / MS_PER_DAY;
             
             const L = (280.460 + 0.9856474 * days) % 360;
             const g = (357.528 + 0.9856003 * days) % 360;
@@ -680,16 +628,13 @@
 
             // Avancement du temps
             if (timeSpeed > 0) {
-                simulatedDate.setTime(simulatedDate.getTime() + (timeSpeed * 86400000));
+                simulatedDate.setTime(simulatedDate.getTime() + (timeSpeed * MS_PER_DAY));
                 updateDateDisplay();
             }
 
             // Rotation de la Terre sur elle-même (Cycle Jour/Nuit)
             if (earthMesh) {
                 earthMesh.rotation.y += CONFIG.rotationSpeed;
-            }
-            if (cloudMesh) {
-                cloudMesh.rotation.y += CONFIG.rotationSpeed * 1.15; // Les nuages tournent un peu plus vite
             }
 
             // Mise à jour position Soleil
@@ -725,69 +670,9 @@
             dateDisplay.innerText = simulatedDate.toLocaleDateString('fr-FR');
         }
 
-        let calDate = new Date();
-        function initCalendar() {
-            document.getElementById('date-input').addEventListener('click', openCalendar);
-            document.getElementById('today-btn').addEventListener('click', () => {
-                simulatedDate = new Date();
-                updateDateDisplay();
-            });
-            document.getElementById('cal-prev').onclick = () => { calDate.setUTCMonth(calDate.getUTCMonth() - 1); renderCalendar(); };
-            document.getElementById('cal-next').onclick = () => { calDate.setUTCMonth(calDate.getUTCMonth() + 1); renderCalendar(); };
-            document.getElementById('cal-close').onclick = closeCalendar;
-            document.getElementById('calendar-overlay').onclick = closeCalendar;
-        }
-
-        function renderCalendar() {
-            const grid = document.getElementById('custom-calendar-grid'); grid.innerHTML = '';
-            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-            const daysShort = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-            
-            document.getElementById('cal-month-year').innerText = `${monthNames[calDate.getUTCMonth()]} ${calDate.getUTCFullYear()}`;
-            daysShort.forEach(d => { const div = document.createElement('div'); div.className = 'calendar-day-header'; div.innerText = d; grid.appendChild(div); });
-
-            const firstDay = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth(), 1));
-            const lastDay = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth() + 1, 0));
-            
-            for(let i=0; i<firstDay.getUTCDay(); i++) { const div = document.createElement('div'); div.className = 'calendar-day empty'; grid.appendChild(div); }
-
-            for(let i=1; i<=lastDay.getUTCDate(); i++) {
-                const div = document.createElement('div'); div.className = 'calendar-day'; div.innerText = i;
-                if (i === simulatedDate.getUTCDate() && calDate.getUTCMonth() === simulatedDate.getUTCMonth() && calDate.getUTCFullYear() === simulatedDate.getUTCFullYear()) div.classList.add('selected');
-                div.onclick = () => {
-                    simulatedDate = new Date(Date.UTC(calDate.getUTCFullYear(), calDate.getUTCMonth(), i, 12, 0, 0));
-                    updateDateDisplay();
-                    closeCalendar();
-                };
-                grid.appendChild(div);
-            }
-        }
-
-        function openCalendar() { 
-            calDate = new Date(simulatedDate); 
-            renderCalendar(); 
-            document.getElementById('custom-calendar').style.display = 'block'; 
-            document.getElementById('calendar-overlay').style.display = 'block'; 
-        }
-
-        function closeCalendar() { 
-            document.getElementById('custom-calendar').style.display = 'none'; 
-            document.getElementById('calendar-overlay').style.display = 'none'; 
-        }
-
-        // --- NOUVEAU : GARBAGE COLLECTOR A LA FERMETURE ---
-        window.addEventListener('beforeunload', () => {
-            scene.traverse(child => {
-                if (child.isMesh || child.isPoints || child.isLine) {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) {
-                        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-                        else child.material.dispose();
-                    }
-                }
-            });
-            renderer.dispose();
-        });
+        // --- GARBAGE COLLECTOR & WEBGL CONTEXT HANDLING ---
+        initGarbageCollector(scene, renderer);
+        initWebGLContextHandling(renderer, animate);
     </script>
 
 </body>

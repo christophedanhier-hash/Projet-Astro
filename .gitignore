@@ -6,3 +6,26 @@ android/.gradle/
 android/local.properties
 *.log
 dist/
+
+# IDE
+.idea/
+.vscode/
+
+# Android build artifacts
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Firebase
+google-services.json
+
+# Environment
+.env
+.env.*
+
+# Capacitor local overrides
+capacitor.config.local.json
+
+# Android profiling
+*.hprof

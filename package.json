@@ -1,10 +1,21 @@
 {
+  "name": "astrotofdan",
+  "version": "3.1.0",
+  "description": "Application de planétarium interactive pour l'observation astronomique",
+  "private": true,
+  "license": "UNLICENSED",
+  "author": "TofDan",
+  "scripts": {
+    "sync": "npx cap sync",
+    "build": "npx cap sync && cd android && ./gradlew assembleDebug",
+    "dev": "npx cap run android"
+  },
   "dependencies": {
-    "@capacitor/android": "^8.1.0"
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/core": "^8.1.0"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^8.1.0",
-    "@capacitor/core": "^8.1.0"
+    "@capacitor/cli": "^8.1.0"
   }
 }

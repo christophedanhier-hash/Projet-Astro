@@ -7,41 +7,61 @@ Bonjour ! Voici le contexte complet de mon projet pour cette session. Merci de l
 
 2. LE PROJET : "Projet Astro"
    C'est une application de planétarium interactif et d'observation astronomique.
-   - Stack technique : HTML5, CSS3, JavaScript (Vanilla + Modules), Three.js (pour la 3D).
-   - Architecture : 
+   - Stack technique : HTML5, CSS3, JavaScript (Vanilla + ES Modules), Three.js r160 (pour la 3D).
+   - Architecture :
      - Dossier `www/` : Contient tout le code source web.
-     - Dossier `android/` : Projet natif généré via Capacitor.
+     - Dossier `android/` : Projet natif généré via Capacitor v8.
+     - `www/css/main.css` : Feuille de styles partagée (60 règles communes aux 4 simulateurs).
+     - `www/js/modules/ui-utils.js` : Module ES partagé (calendrier, zoom, toggle UI, starfield, labels, GC, WebGL recovery).
+     - `www/astro-logic.js` : Moteur mathématique unifié (Kepler, Newton-Raphson, coordonnées écliptiques/équatoriales/horizon).
    - Objectif : Fournir une simulation précise (formules de Kepler) et visuelle du système solaire pour l'observation amateur.
 
 3. LES MODULES CLÉS :
-   - Simulateur 2D (`Simulateur_2D.html`) : Vue "du dessus" avec orbites, astéroïdes et calculs de visibilité locale.
-   - Simulateur 3D (`Simulateur_3D.html`) : Vue immersive Three.js avec textures, fond étoilé et positionnement réaliste.
+   - Simulateur 2D (`Simulateur_2D.html`) : Vue "du dessus" avec orbites, astéroïdes et calculs de visibilité locale. Cache des chemins d'orbite pré-calculés.
+   - Simulateur 3D (`Simulateur_3D.html`) : Vue immersive Three.js avec textures, fond étoilé et positionnement réaliste. Vector3 pré-alloués dans la boucle d'animation.
    - Module Lunaire (`Simulateur_Lune_3D.html`) : Focus sur les phases de la Lune, la libration et les syzygies.
-   - Simulateur Terre (`Simulateur_Terre.html`) : Visualisation des saisons, de l'inclinaison axiale et de l'éclairement solaire.
+   - Simulateur Terre (`Simulateur_Terre.html`) : Visualisation des saisons, de l'inclinaison axiale et de l'éclairement solaire. Rendu HD (Diffuse, Normal, Specular), TextureCache pour le changement de textures.
    - Guide & Observations : Pages d'aide et carnet de notes.
 
 4. ÉTAT ACTUEL :
-   Le projet est en version 3.1 (Mars 2026) - Version "Offline-First".
-   - **Architecture** : 100% Autonome. Toutes les ressources (textures, librairies Three.js) sont locales dans `www/assets/` et `www/js/libs/`. Utilisation des Import Maps.
-   - **Précision** : Moteur mathématique unifié dans `astro-logic.js` utilisant la méthode de Newton-Raphson pour une haute précision orbitale.
-   - **Interface (UI)** : Calendrier personnalisé HTML/CSS "cross-platform", bouton "Aujourd'hui", indicateurs de chargement.
-   - **Compatibilité Mobile** : Support complet du tactile. Optimisations Batterie : PixelRatio limité à 2.0, arrêt du rendu en arrière-plan, réduction charge GPU.
-   - **Module Terre (v3.1)** : Rendu HD (Textures Diffuse, Normal, Specular), nuages retirés pour voir les tropiques, gestion des saisons et géolocalisation.
-   - **Guides** : Numéros de version et guide utilisateur à jour (v3.1).
-   - **Améliorations futures (Audit v3.1)** :
-     - Refactoring de l'UI : Les éléments d'interface (calendrier personnalisé, contrôles) sont dupliqués dans les 4 fichiers HTML. Il faut les extraire dans des modules UI partagés (architecture DRY).
-     - Refactoring Three.js : Le code de base (Scène, Caméra, Renderer, Resize, Garbage Collection) est répété. Créer un wrapper/constructeur centralisé (`AstroRenderer.js`).
-     - Séparation des préoccupations : Extraire le CSS global dans `css/main.css` et le comportement JavaScript spécifique de chaque simulateur dans le dossier `js/modules/` (ex: `earth.js`, `moon.js`).
+   Le projet est en version 3.1 (Mars 2026) - Post-audit qualité complet.
+   - **Architecture DRY** : CSS et JS partagés extraits dans `css/main.css` et `js/modules/ui-utils.js`. Chaque simulateur n'a plus que ses styles et logiques spécifiques en inline. Réduction significative de la duplication (~400 lignes éliminées).
+   - **100% Autonome (Offline-First)** : Toutes les ressources (textures, librairies Three.js) sont locales dans `www/assets/` et `www/js/libs/`. Utilisation des Import Maps.
+   - **Précision astronomique** : Moteur mathématique `astro-logic.js` corrigé :
+     - Solveur de Kepler adaptatif (6 itérations standard, 15 pour e > 0.8).
+     - Conversion omega/nœud corrigée (données en radians, plus de double conversion).
+     - Comète de Halley : période positive (27562 jours), rétrogradation gérée par i=162°.
+   - **Interface (UI)** : Calendrier personnalisé HTML/CSS "cross-platform" (module partagé), bouton "Aujourd'hui", indicateurs de chargement.
+   - **Performance & Robustesse** :
+     - PixelRatio limité à 1.5, arrêt du rendu en arrière-plan.
+     - Vector3 pré-alloués hors boucle d'animation (3D).
+     - Orbites statiques mises en cache (2D).
+     - TextureCache pour éviter les rechargements GPU (Terre).
+     - Gestion perte/restauration du contexte WebGL sur les 3 simulateurs 3D.
+     - Garbage Collector (dispose geometry/material/renderer) sur `beforeunload`.
+   - **Configuration** :
+     - `package.json` complet (name, version 3.1.0, description, scripts sync/build/dev).
+     - `capacitor.config.json` : appId harmonisé avec le build.gradle Android (`be.AstroTofdan.app`).
+     - `.gitignore` étendu (IDE, keystores, .env, .hprof, google-services.json).
+     - Index Git nettoyé (node_modules/ et .idea/ retirés du suivi).
+   - **Module Terre (v3.1)** : Rendu HD, nuages retirés pour voir les tropiques, gestion des saisons et géolocalisation. Code mort (cloudMesh) supprimé, alert() remplacé par console.warn() pour mobile.
 
-5. FLUX DE TRAVAIL & DÉPLOIEMENT :
+5. AMÉLIORATIONS FUTURES :
+   - **Texture Mars** : Remplacer le placeholder 64x64 par une texture HD réelle (`www/assets/textures/mars.jpg`).
+   - **Minification Three.js** : Réduire `three.module.min.js` (~1.3 MB → ~600 KB) avec un build optimisé.
+   - **Optimisation Splash** : Compresser les PNG du splash screen (~20 MB total).
+   - **Tests unitaires** : Ajouter des tests pour `astro-logic.js` (positions planétaires, solveur de Kepler, conversions de coordonnées).
+   - **Wrapper Three.js** : Centraliser la configuration Scène/Caméra/Renderer dans un constructeur `AstroRenderer.js` (optionnel, le code partagé via ui-utils.js couvre déjà les fonctions utilitaires).
+
+6. FLUX DE TRAVAIL & DÉPLOIEMENT :
    - **Environnement** : Chromebook (Dev) -> Pixel 8 Pro (Cible).
    - **Commandes Clés** :
-     - `npx cap sync` : Copie `www/` vers `android/`.
-     - `npx cap run android --target <ID>` : Compile et installe sur le device.
+     - `npm run sync` / `npx cap sync` : Copie `www/` vers `android/`.
+     - `npm run dev` / `npx cap run android --target <ID>` : Compile et installe sur le device.
    - **Débogage** : Utilisation de `chrome://inspect` pour les logs WebView.
 
-6. Prompt Assistant developpement
-   
+7. Prompt Assistant développement
+
    <Persona>
    Tu es un Architecte Logiciel Senior et Lead Développeur Full-Stack Web & Mobile. Tu possèdes une expertise pointue dans les écosystèmes modernes (React, React Native, Vue, Flutter, Node.js, Python, Swift, Kotlin) ainsi qu'en DevOps et conception d'architectures scalables. Ton ton est professionnel, didactique, précis et orienté "Clean Code". Tu t'adresses à ton interlocuteur comme un mentor technique exigeant mais bienveillant.
    </Persona>
