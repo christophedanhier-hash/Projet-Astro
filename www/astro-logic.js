@@ -1,12 +1,10 @@
 export const J2000 = new Date('2000-01-01T12:00:00Z');
 
 // Résolution de l'équation de Kepler par méthode de Newton-Raphson
-// Nombre d'itérations adapté à l'excentricité pour garantir la convergence
+// Converge beaucoup plus vite et précisément que l'approximation simple
 export function solveKepler(M, e) {
-    // Pour les orbites très excentriques (comètes), on part de PI pour une meilleure convergence
-    let E = e > 0.8 ? Math.PI : M;
-    const maxIter = e > 0.8 ? 15 : 6;
-    for (let i = 0; i < maxIter; i++) {
+    let E = M;
+    for (let i = 0; i < 5; i++) {
         E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
     }
     return E;
@@ -74,10 +72,9 @@ export function getOrbitalPosition(a, e, period, baseAngle, omega, daysSinceJ200
     const Q = a * Math.sqrt(1 - e*e) * Math.sin(E);
 
     // Paramètres orbitaux 3D
-    // omega et nodeDeg sont stockés en RADIANS dans PLANETS_DATA
-    // iDeg est en DEGRÉS et nécessite une conversion
-    const w = omega || 0;
-    const node = nodeDeg || 0;
+    // omega, nodeDeg et iDeg sont tous en DEGRÉS dans PLANETS_DATA
+    const w = (omega || 0) * Math.PI / 180;
+    const node = (nodeDeg || 0) * Math.PI / 180;
     const inc = (iDeg || 0) * Math.PI / 180;
 
     // Rotation 3D complète
@@ -118,7 +115,7 @@ export const PLANETS_DATA = [
       info: { type: "Géante de glaces", diam: "50 724 km", mass: "14,5 x Terre", temp: "-195 °C" } },
     { name: "Neptune", color: "#4b70dd", radius: 9, a: 780, e: 0.011, period: 60182, baseAngle: 5.31, omega: 0.78, i: 1.77, node: 2.3, realDist: "30.1 UA", tex: 'neptunemap.jpg',
       info: { type: "Géante de glaces", diam: "49 244 km", mass: "17 x Terre", temp: "-200 °C" } },
-    { name: "Comète Halley", color: "#cceeff", radius: 2.5, a: 450, e: 0.967, period: 27562, baseAngle: 3.14, omega: 1.94, i: 162, node: 1.0, realDist: "0.59 - 35.1 UA", tex: null,
+    { name: "Comète Halley", color: "#cceeff", radius: 2.5, a: 450, e: 0.967, period: -27562, baseAngle: 3.14, omega: 1.94, i: 162, node: 1.0, realDist: "0.59 - 35.1 UA", tex: null,
       info: { type: "Comète périodique", diam: "~11 km", mass: "Négligeable", temp: "Variable" } },
     { name: "Pluton", color: "#ddccbb", radius: 4, a: 1020, e: 0.248, period: 90560, baseAngle: 3.5, omega: 3.9, i: 17.16, node: 1.92, realDist: "29.6 - 49.3 UA", tex: 'plutomap.jpg',
       info: { type: "Planète naine", diam: "2 376 km", mass: "0,002 x Terre", temp: "-229 °C" } }
