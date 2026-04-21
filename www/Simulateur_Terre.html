@@ -18,8 +18,9 @@
             <h1>🌍 Terre & Saisons</h1>
             
             <div class="info-box">
-                <span class="highlight">Inclinaison :</span> <span id="tilt-display">23.5°</span><br>
+                <span class="highlight">Inclinaison :</span> <span id="tilt-display">23.45°</span><br>
                 <span class="highlight">Position Soleil :</span> <span id="sun-angle">--</span><br>
+                <span class="highlight">Distance au Soleil :</span> <span id="sun-dist">--</span> UA<br>
                 <span id="saison-display" class="season-text">--</span>
             </div>
 
@@ -38,11 +39,11 @@
 
             <div class="control-group">
                 <label style="font-size: 0.9rem;">Inclinaison (Tilt) :</label>
-                <input type="range" id="tilt-slider" min="0" max="180" step="0.5" value="23.5">
+                <input type="range" id="tilt-slider" min="0" max="180" step="0.05" value="23.45">
                 <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#aaa;">
-                    <span>0°</span><span>23.5°</span><span>90°</span><span>180°</span>
+                    <span>0°</span><span>23.45°</span><span>90°</span><span>180°</span>
                 </div>
-                <button id="reset-tilt" style="margin-top:5px; font-size:0.8rem; padding:4px;">Rétablir 23.5°</button>
+                <button id="reset-tilt" style="margin-top:5px; font-size:0.8rem; padding:4px;">Rétablir 23.45°</button>
             </div>
 
             <div class="control-group">
@@ -117,7 +118,7 @@
 
         // --- Configuration ---
         const CONFIG = {
-            tilt: 23.5 * (Math.PI / 180), // Conversion en radians
+            tilt: 23.45 * (Math.PI / 180), // Conversion en radians
             rotationSpeed: 0.005,
             // Textures locales
             textureUrl: './assets/textures/earth_day.jpg',
@@ -218,12 +219,12 @@
             const resetTiltBtn = document.getElementById('reset-tilt');
 
             const updateTilt = (val) => {
-                tiltDisplay.innerText = val.toFixed(1) + '°';
+                tiltDisplay.innerText = val.toFixed(2) + '°';
                 if (earthGroup) earthGroup.rotation.z = val * (Math.PI / 180);
             };
 
             tiltSlider.addEventListener('input', (e) => updateTilt(parseFloat(e.target.value)));
-            resetTiltBtn.addEventListener('click', () => { tiltSlider.value = 23.5; updateTilt(23.5); });
+            resetTiltBtn.addEventListener('click', () => { tiltSlider.value = 23.45; updateTilt(23.45); });
 
             // Boutons Zoom
             initCameraZoom(THREE, camera, controls);
@@ -311,8 +312,8 @@
                 speedSlider.value = 0;
                 speedDisplay.innerText = "Pause";
                 // Reset Tilt
-                tiltSlider.value = 23.5;
-                updateTilt(23.5);
+                tiltSlider.value = 23.45;
+                updateTilt(23.45);
                 // Reset Caméra
                 controls.reset();
                 camera.position.set(0, 0, 6);
@@ -423,13 +424,11 @@
             const orbitGeo = new THREE.BufferGeometry();
             const points = [];
             const steps = 128;
+            const startMs = Date.UTC(2026, 0, 1, 12, 0, 0); // Base pour tracer l'ellipse annuelle
             for (let i = 0; i <= steps; i++) {
-                const theta = (i / steps) * Math.PI * 2;
-                points.push(new THREE.Vector3(
-                    Math.cos(theta) * CONFIG.sunDistance,
-                    0,
-                    Math.sin(theta) * CONFIG.sunDistance
-                ));
+                const stepDate = new Date(startMs + (i / steps) * 365.25 * MS_PER_DAY);
+                const pos = getSunPosition(stepDate); // Réutilise la logique avec l'excentricité e=0.017
+                points.push(new THREE.Vector3(pos.x, 0, -pos.z));
             }
             orbitGeo.setFromPoints(points);
             const orbitMat = new THREE.LineBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.3 });
@@ -572,13 +571,26 @@
             const L = (280.460 + 0.9856474 * days) % 360;
             const g = (357.528 + 0.9856003 * days) % 360;
             const radG = g * (Math.PI / 180);
-            const lambda = L + 1.915 * Math.sin(radG) + 0.020 * Math.sin(2 * radG);
+            
+            // Équation du centre
+            const C = 1.915 * Math.sin(radG) + 0.020 * Math.sin(2 * radG);
+            const lambda = L + C;
             const radLambda = lambda * (Math.PI / 180);
 
-            const x = Math.cos(radLambda) * CONFIG.sunDistance;
-            const z = Math.sin(radLambda) * CONFIG.sunDistance;
+            // Anomalie vraie (theta) avec l'équation du centre
+            const theta = g + C;
+            const radTheta = theta * (Math.PI / 180);
 
-            return { x, z, lambda: lambda % 360 };
+            // Rayon orbital dynamique basé sur e = 0.017
+            const a = 1.0;
+            const e = 0.017;
+            const distUA = a * (1 - e * e) / (1 + e * Math.cos(radTheta));
+
+            // Position visuelle 3D calculée avec la vraie distance simulée
+            const x = Math.cos(radLambda) * CONFIG.sunDistance * distUA;
+            const z = Math.sin(radLambda) * CONFIG.sunDistance * distUA;
+
+            return { x, z, lambda: lambda % 360, distUA: distUA };
         }
 
         // Calcul astronomique simplifié des saisons (Algorithme de Meeus)
@@ -646,11 +658,12 @@
 
             controls.update();
             renderer.render(scene, camera);
-            updateUI(sunPos.lambda);
+            updateUI(sunPos.lambda, sunPos.distUA);
         }
 
-        function updateUI(lambda) {
+        function updateUI(lambda, distUA) {
             const sunAngleDisplay = document.getElementById('sun-angle');
+            const sunDistDisplay = document.getElementById('sun-dist');
             const saisonDisplay = document.getElementById('saison-display');
             
             // Détermination de la saison (Approximation Hémisphère Nord)
@@ -662,6 +675,13 @@
 
             if(saisonDisplay) saisonDisplay.innerText = saison;
             if(sunAngleDisplay) sunAngleDisplay.innerText = `Long. Écliptique : ${Math.round(lambda)}°`;
+            
+            if (sunDistDisplay) {
+                sunDistDisplay.innerText = distUA.toFixed(3);
+                if (distUA < 0.985) sunDistDisplay.style.color = "#00ffff"; // Périhélie (plus proche, froid dans Nord)
+                else if (distUA > 1.015) sunDistDisplay.style.color = "#ff6666"; // Aphélie (plus loin, chaud dans l'Nord)
+                else sunDistDisplay.style.color = "#ffffff";
+            }
         }
 
         // --- LOGIQUE CALENDRIER (Identique au Simu 3D) ---
